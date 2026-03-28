@@ -1,23 +1,590 @@
-🏒 NHL Matchup Predictor
-All NHL teams, cross-referenced opponents, past scores, top point leaders, upcoming games, and a rough next-game winner pick using standings, recent form, home or road split, head-to-head, and rest.
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NHL Matchup Predictor</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NHL Predictor">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --line: #334155;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --chip: #0b1220;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+      color: var(--text);
+    }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 18px; }
+    .hero, .panel, .stat, .prediction-card, .tile {
+      background: rgba(17, 24, 39, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+    .hero { padding: 18px; margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2, h3 { margin: 0; }
+    .sub { color: var(--muted); line-height: 1.5; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr .9fr auto;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    input, select, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 15px;
+    }
+    button { cursor: pointer; font-weight: 700; }
+    button:hover { filter: brightness(1.08); }
+    .summary-grid,
+    .today-grid,
+    .prediction-grid,
+    .cards {
+      display: grid;
+      gap: 12px;
+    }
+    .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 18px; }
+    .today-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
+    .prediction-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stat { padding: 14px; }
+    .stat .label { color: var(--muted); font-size: 13px; }
+    .stat .value { font-size: 26px; font-weight: 800; margin-top: 6px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .panel-body { padding: 14px; }
+    .teams-list {
+      display: grid;
+      gap: 10px;
+      max-height: 75vh;
+      overflow: auto;
+      padding: 14px;
+    }
+    .team-btn {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+    }
+    .team-btn.active { border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa inset; }
+    .logo { width: 34px; height: 34px; object-fit: contain; background: white; border-radius: 50%; padding: 3px; }
+    .card, .tile, .prediction-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .card h3, .tile h3, .prediction-card h3 { margin-bottom: 10px; font-size: 18px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .prediction {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(30,41,59,.95), rgba(15,23,42,.95));
+      margin-bottom: 14px;
+    }
+    .winner { font-size: 24px; font-weight: 800; margin: 6px 0; }
+    .muted { color: var(--muted); }
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .game-row {
+      border-top: 1px solid rgba(148,163,184,.18);
+      padding: 12px 0;
+    }
+    .game-row:first-child { border-top: 0; padding-top: 0; }
+    .scoreline { font-size: 18px; font-weight: 700; }
+    .leaders { margin-top: 6px; color: var(--muted); font-size: 14px; }
+    .small-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .tiny { font-size: 12px; color: var(--muted); }
+    .empty {
+      text-align: center;
+      padding: 40px 14px;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+    }
+    .error-box {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(239,68,68,.45);
+      background: rgba(127, 29, 29, .22);
+      color: #fecaca;
+      display: none;
+    }
+    @media (max-width: 980px) {
+      .layout, .cards, .summary-grid, .toolbar, .today-grid, .prediction-grid { grid-template-columns: 1fr; }
+      .teams-list { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>🏒 NHL Matchup Predictor</h1>
+      <div class="sub">
+        All NHL teams, cross-referenced opponents, past scores, top point leaders, upcoming games, and a rough next-game winner pick using standings, recent form, home or road split, head-to-head, and rest.
+      </div>
+      <div class="toolbar">
+        <input id="searchBox" type="text" placeholder="Search team name or code">
+        <select id="opponentFilter">
+          <option value="">All opponents</option>
+        </select>
+        <button id="refreshBtn" type="button">Refresh</button>
+      </div>
+      <div id="topError" class="error-box"></div>
+    </div>
 
-          All opponents
-        
-Refresh
-Teams
--
-Season
--
-Selected Team
--
-Next Game Pick
--
-Today’s NHL games
-Loading...
+    <div class="summary-grid">
+      <div class="stat"><div class="label">Teams</div><div class="value" id="teamsCount">-</div></div>
+      <div class="stat"><div class="label">Season</div><div class="value" id="seasonCode">-</div></div>
+      <div class="stat"><div class="label">Selected Team</div><div class="value" id="selectedCode">-</div></div>
+      <div class="stat"><div class="label">Next Game Pick</div><div class="value" id="selectedPick">-</div></div>
+    </div>
 
-League next-game picks
-Loading...
+    <div class="today-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <strong>Today’s NHL games</strong>
+          <span class="muted" id="todayHint">Loading...</span>
+        </div>
+        <div class="panel-body" id="todayArea">
+          <div class="empty">Loading...</div>
+        </div>
+      </div>
 
-Teams
-Loading...
-Pick a team to load the full cross-reference view.
+      <div class="panel">
+        <div class="panel-head">
+          <strong>League next-game picks</strong>
+          <span class="muted" id="predictionHint">Loading...</span>
+        </div>
+        <div class="panel-body" id="leaguePredictionArea">
+          <div class="empty">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <div class="panel-head">
+          <strong>Teams</strong>
+          <span class="muted" id="teamListHint">Loading...</span>
+        </div>
+        <div class="teams-list" id="teamsList"></div>
+      </div>
+
+      <div id="detailArea">
+        <div class="empty">Pick a team to load the full cross-reference view.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const state = {
+        teams: [],
+        selectedTeam: '',
+        opponent: ''
+      };
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
+      function esc(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function fmtDate(value) {
+        if (!value) return '-';
+        const d = new Date(value.includes('T') ? value : value + 'T12:00:00Z');
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      function fmtDateTime(value) {
+        if (!value) return '-';
+        const d = new Date(value);
+        return d.toLocaleString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+      }
+
+      function setTopError(message) {
+        const box = byId('topError');
+        if (!message) {
+          box.style.display = 'none';
+          box.textContent = '';
+          return;
+        }
+        box.style.display = 'block';
+        box.textContent = message;
+      }
+
+      async function getJSON(url) {
+        const res = await fetch(url, { cache: 'no-store' });
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = null;
+        }
+        if (!res.ok) {
+          const msg = data && data.error ? data.error : ('Request failed: ' + res.status);
+          throw new Error(msg);
+        }
+        return data;
+      }
+
+      function renderOpponentOptions(options) {
+        const sel = byId('opponentFilter');
+        let html = '<option value="">All opponents</option>';
+        for (let i = 0; i < options.length; i += 1) {
+          const code = options[i];
+          html += '<option value="' + esc(code) + '">' + esc(code) + '</option>';
+        }
+        sel.innerHTML = html;
+        sel.value = state.opponent || '';
+      }
+
+      function renderTeams() {
+        const query = byId('searchBox').value.trim().toLowerCase();
+        const host = byId('teamsList');
+
+        const filtered = state.teams.filter(function (team) {
+          return !query ||
+            team.name.toLowerCase().indexOf(query) !== -1 ||
+            team.code.toLowerCase().indexOf(query) !== -1;
+        });
+
+        let html = '';
+        for (let i = 0; i < filtered.length; i += 1) {
+          const team = filtered[i];
+          const active = team.code === state.selectedTeam ? ' active' : '';
+          const logo = team.logo || team.darkLogo || '';
+          html += '' +
+            '<button class="team-btn' + active + '" data-team="' + esc(team.code) + '">' +
+              (logo ? '<img class="logo" src="' + esc(logo) + '" alt="' + esc(team.code) + '">' : '') +
+              '<div>' +
+                '<div><strong>' + esc(team.name) + '</strong></div>' +
+                '<div class="muted tiny">' + esc(team.code) + '</div>' +
+              '</div>' +
+            '</button>';
+        }
+
+        host.innerHTML = html || '<div class="empty">No teams found.</div>';
+        byId('teamListHint').textContent = filtered.length + ' shown';
+
+        const buttons = host.querySelectorAll('[data-team]');
+        for (let i = 0; i < buttons.length; i += 1) {
+          buttons[i].addEventListener('click', function () {
+            state.selectedTeam = this.getAttribute('data-team') || '';
+            state.opponent = '';
+            byId('opponentFilter').value = '';
+            renderTeams();
+            loadTeamDetail();
+          });
+        }
+      }
+
+      function renderPredictionBlock(detail) {
+        const p = detail.prediction;
+        if (!p) {
+          return '<div class="prediction"><div class="muted">No upcoming game found for this filter.</div></div>';
+        }
+
+        const winnerName = p.predictedWinner === detail.code ? detail.team : p.game.opponentName;
+        return '' +
+          '<div class="prediction">' +
+            '<div class="muted">Next predicted game</div>' +
+            '<div class="winner">' + esc(winnerName) + '</div>' +
+            '<div>' + esc(detail.code) + ' vs ' + esc(p.opponent) + ' • ' + fmtDateTime(p.game.startTimeUTC) + '</div>' +
+            '<div class="chips">' +
+              '<div class="chip">' + esc(detail.code) + ' win chance: ' + esc(p.teamWinProbability) + '%</div>' +
+              '<div class="chip">Confidence: ' + esc(p.confidence) + '%</div>' +
+              '<div class="chip">' + (p.game.isHome ? 'Home ice' : 'Road game') + '</div>' +
+            '</div>' +
+            '<div class="leaders" style="margin-top:10px;">Why: ' + p.reasonSummary.map(esc).join(' • ') + '</div>' +
+          '</div>';
+      }
+
+      function renderRecentGames(games) {
+        if (!games || !games.length) {
+          return '<div class="empty">No completed games found for this view.</div>';
+        }
+
+        let html = '';
+        for (let i = 0; i < games.length; i += 1) {
+          const g = games[i];
+          const leaders = (g.pointsLeaders || []).map(function (p) {
+            return p.name + ' (' + p.points + 'P)';
+          }).join(', ');
+
+          html += '' +
+            '<div class="game-row">' +
+              '<div class="scoreline">' + esc(g.teamCode) + ' ' + esc(g.teamScore) + ' - ' + esc(g.opponentScore) + ' ' + esc(g.opponentCode) +
+                ' <span class="' + (g.won ? 'good' : 'bad') + '">(' + (g.goalDiff > 0 ? '+' : '') + esc(g.goalDiff) + ')</span></div>' +
+              '<div class="muted">' + fmtDate(g.gameDate) + ' • ' + (g.isHome ? 'Home' : 'Away') + ' • ' + esc(g.venue || '') + '</div>' +
+              '<div class="leaders">Point leaders: ' + esc(leaders || 'No points recorded in this boxscore view.') + '</div>' +
+            '</div>';
+        }
+        return html;
+      }
+
+      function renderUpcomingGames(games) {
+        if (!games || !games.length) {
+          return '<div class="empty">No upcoming games found for this view.</div>';
+        }
+
+        let html = '';
+        for (let i = 0; i < games.length; i += 1) {
+          const g = games[i];
+          html += '' +
+            '<div class="game-row">' +
+              '<div class="scoreline">' + esc(g.teamCode) + ' vs ' + esc(g.opponentCode) + '</div>' +
+              '<div class="muted">' + fmtDateTime(g.startTimeUTC) + ' • ' + (g.isHome ? 'Home' : 'Away') + ' • ' + esc(g.venue || '') + '</div>' +
+            '</div>';
+        }
+        return html;
+      }
+
+      function renderDetail(detail) {
+        byId('selectedCode').textContent = detail.code || '-';
+        byId('selectedPick').textContent = detail.prediction ? detail.prediction.predictedWinner : '-';
+        renderOpponentOptions(detail.crossReferenceOptions || []);
+
+        byId('detailArea').innerHTML = '' +
+          renderPredictionBlock(detail) +
+          '<div class="cards">' +
+            '<div class="card">' +
+              '<h3>' + esc(detail.team) + ' standing snapshot</h3>' +
+              '<div class="small-grid">' +
+                '<div><div class="tiny">Points</div><div><strong>' + esc(detail.standing.points || '-') + '</strong></div></div>' +
+                '<div><div class="tiny">Record</div><div><strong>' + esc(detail.standing.wins || 0) + '-' + esc(detail.standing.losses || 0) + '-' + esc(detail.standing.otLosses || 0) + '</strong></div></div>' +
+                '<div><div class="tiny">League rank</div><div><strong>' + esc(detail.standing.leagueSequence || '-') + '</strong></div></div>' +
+                '<div><div class="tiny">Points %</div><div><strong>' + esc(detail.standing.pointPctg || '-') + '</strong></div></div>' +
+                '<div><div class="tiny">Goals / game</div><div><strong>' + esc(detail.standing.goalForPerGame || '-') + '</strong></div></div>' +
+                '<div><div class="tiny">Goals against / game</div><div><strong>' + esc(detail.standing.goalAgainstPerGame || '-') + '</strong></div></div>' +
+              '</div>' +
+              '<div class="chips">' +
+                '<div class="chip">Completed: ' + esc(detail.totals.completed) + '</div>' +
+                '<div class="chip">Upcoming: ' + esc(detail.totals.upcoming) + '</div>' +
+                '<div class="chip">Season games loaded: ' + esc(detail.totals.gamesPlayed) + '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="card">' +
+              '<h3>Upcoming games</h3>' +
+              renderUpcomingGames(detail.upcomingGames || []) +
+            '</div>' +
+
+            '<div class="card">' +
+              '<h3>Recent completed games</h3>' +
+              renderRecentGames(detail.recentGames || []) +
+            '</div>' +
+
+            '<div class="card">' +
+              '<h3>How this app makes the rough pick</h3>' +
+              '<div class="muted">It combines standings points percentage, season goal differential, recent 5-game form, home or road split, last few head-to-head results, and rest days. It is a rough model, not a betting-grade forecast.</div>' +
+            '</div>' +
+          '</div>';
+      }
+
+      function renderTodayGames(data) {
+        const host = byId('todayArea');
+        const games = data.games || [];
+        byId('todayHint').textContent = games.length ? (games.length + ' games') : 'No games';
+
+        if (!games.length) {
+          host.innerHTML = '<div class="empty">No NHL games found for today.</div>';
+          return;
+        }
+
+        let html = '';
+        for (let i = 0; i < games.length; i += 1) {
+          const g = games[i];
+          const liveOrPregame = g.gameState === 'OFF'
+            ? ('Final • ' + g.awayScore + '-' + g.homeScore)
+            : (g.gameState + ' • ' + fmtDateTime(g.startTimeUTC));
+
+          html += '' +
+            '<div class="tile">' +
+              '<h3>' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</h3>' +
+              '<div class="muted">' + esc(g.awayName) + ' vs ' + esc(g.homeName) + '</div>' +
+              '<div class="chips">' +
+                '<div class="chip">' + esc(liveOrPregame) + '</div>' +
+                '<div class="chip">' + esc(g.venue || '') + '</div>' +
+              '</div>' +
+            '</div>';
+        }
+        host.innerHTML = html;
+      }
+
+      function renderLeaguePredictions(data) {
+        const host = byId('leaguePredictionArea');
+        const items = data.predictions || [];
+        byId('predictionHint').textContent = items.length ? (items.length + ' loaded') : 'No picks';
+
+        if (!items.length) {
+          host.innerHTML = '<div class="empty">No league predictions available right now.</div>';
+          return;
+        }
+
+        let html = '';
+        const show = items.slice(0, 8);
+        for (let i = 0; i < show.length; i += 1) {
+          const p = show[i];
+          const nextGame = p.nextGame || {};
+          const winner = p.predictedWinner;
+          html += '' +
+            '<div class="prediction-card">' +
+              '<h3>' + esc(p.code) + ' vs ' + esc(nextGame.opponentCode || '-') + '</h3>' +
+              '<div class="muted">' + fmtDateTime(nextGame.startTimeUTC) + '</div>' +
+              '<div class="winner" style="font-size:20px;">Pick: ' + esc(winner) + '</div>' +
+              '<div class="chips">' +
+                '<div class="chip">Win chance: ' + esc(p.teamWinProbability) + '%</div>' +
+                '<div class="chip">Confidence: ' + esc(p.confidence) + '%</div>' +
+              '</div>' +
+            '</div>';
+        }
+        host.innerHTML = html;
+      }
+
+      async function loadTodayGames() {
+        try {
+          const data = await getJSON('/api/today');
+          renderTodayGames(data);
+        } catch (err) {
+          byId('todayHint').textContent = 'Error';
+          byId('todayArea').innerHTML = '<div class="empty">Could not load today’s games.</div>';
+        }
+      }
+
+      async function loadLeaguePredictions() {
+        try {
+          const data = await getJSON('/api/predictions');
+          renderLeaguePredictions(data);
+        } catch (err) {
+          byId('predictionHint').textContent = 'Error';
+          byId('leaguePredictionArea').innerHTML = '<div class="empty">Could not load league predictions.</div>';
+        }
+      }
+
+      async function loadTeams() {
+        try {
+          const data = await getJSON('/api/teams');
+          state.teams = data.teams || [];
+          byId('teamsCount').textContent = state.teams.length;
+          byId('seasonCode').textContent = data.season || '-';
+          renderTeams();
+
+          if (!state.selectedTeam && state.teams.length) {
+            state.selectedTeam = state.teams[0].code;
+            renderTeams();
+            await loadTeamDetail();
+          }
+        } catch (err) {
+          byId('teamsCount').textContent = '0';
+          byId('seasonCode').textContent = '-';
+          byId('teamListHint').textContent = 'Error';
+          byId('teamsList').innerHTML = '<div class="empty">Could not load teams.</div>';
+          setTopError('Could not load NHL team data: ' + err.message);
+        }
+      }
+
+      async function loadTeamDetail() {
+        if (!state.selectedTeam) return;
+
+        byId('detailArea').innerHTML = '<div class="empty">Loading ' + esc(state.selectedTeam) + '...</div>';
+        const qs = state.opponent ? ('?opponent=' + encodeURIComponent(state.opponent)) : '';
+
+        try {
+          const detail = await getJSON('/api/team/' + encodeURIComponent(state.selectedTeam) + qs);
+          renderDetail(detail);
+        } catch (err) {
+          byId('selectedCode').textContent = state.selectedTeam;
+          byId('selectedPick').textContent = '-';
+          byId('detailArea').innerHTML = '<div class="empty">Could not load team data.</div>';
+          setTopError('Could not load team view: ' + err.message);
+        }
+      }
+
+      byId('searchBox').addEventListener('input', function () {
+        renderTeams();
+      });
+
+      byId('opponentFilter').addEventListener('change', function (e) {
+        state.opponent = e.target.value || '';
+        loadTeamDetail();
+      });
+
+      byId('refreshBtn').addEventListener('click', function () {
+        setTopError('');
+        loadTodayGames();
+        loadLeaguePredictions();
+        loadTeams();
+      });
+
+      loadTodayGames();
+      loadLeaguePredictions();
+      loadTeams();
+    });
+  </script>
+</body>
+</html>
