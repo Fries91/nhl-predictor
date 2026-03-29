@@ -21,7 +21,7 @@ PRED_TTL = 900
 ANALYZE_TTL = 3600
 
 session = requests.Session()
-session.headers.update({"User-Agent": "Game-Insights/3.3"})
+session.headers.update({"User-Agent": "Game-Insights/3.4"})
 
 _cache: dict[str, tuple[float, Any]] = {}
 
