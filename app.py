@@ -1,25 +1,37 @@
+
 from __future__ import annotations
 
 import math
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import requests
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 
 NHL_API = "https://api-web.nhle.com/v1"
+MLB_API = "https://statsapi.mlb.com/api/v1"
+
+SCORES_TTL = 300        # 5 min
+PREDICTIONS_TTL = 900   # 15 min
+BOARD_TTL = 28800       # 8 hours
 TIMEOUT = 20
-CACHE_TTL = 300
 
 session = requests.Session()
-session.headers.update({"User-Agent": "NHL-Matchup-Predictor/1.1"})
+session.headers.update({"User-Agent": "Multi-Sport-Insights/2.0"})
 
 _cache: dict[str, tuple[float, Any]] = {}
 
+NHL_TEAM_CODE_TO_ID = {
+    "ANA": 24, "BOS": 6, "BUF": 7, "CGY": 20, "CAR": 12, "CHI": 16, "COL": 21,
+    "CBJ": 29, "DAL": 25, "DET": 17, "EDM": 22, "FLA": 13, "LAK": 26, "MIN": 30,
+    "MTL": 8, "NSH": 18, "NJD": 1, "NYI": 2, "NYR": 3, "OTT": 9, "PHI": 4,
+    "PIT": 5, "SJS": 28, "SEA": 55, "STL": 19, "TBL": 14, "TOR": 10, "UTA": 59,
+    "VAN": 23, "VGK": 54, "WSH": 15, "WPG": 52,
+}
 
 def ttl_cache_get(key: str) -> Any | None:
     hit = _cache.get(key)
@@ -31,536 +43,545 @@ def ttl_cache_get(key: str) -> Any | None:
         return None
     return value
 
-
-def ttl_cache_set(key: str, value: Any, ttl: int = CACHE_TTL) -> Any:
+def ttl_cache_set(key: str, value: Any, ttl: int) -> Any:
     _cache[key] = (time.time() + ttl, value)
     return value
 
-
-def fetch_json(url: str, ttl: int = CACHE_TTL) -> Any:
+def fetch_json(url: str, ttl: int) -> Any:
     cached = ttl_cache_get(url)
     if cached is not None:
         return cached
-    response = session.get(url, timeout=TIMEOUT)
-    response.raise_for_status()
-    return ttl_cache_set(url, response.json(), ttl=ttl)
+    res = session.get(url, timeout=TIMEOUT)
+    res.raise_for_status()
+    return ttl_cache_set(url, res.json(), ttl)
 
-
-def _safe_num(value: Any, default: float = 0.0) -> float:
+def safe_float(v: Any, default: float = 0.0) -> float:
     try:
-        return float(value)
+        return float(v)
     except (TypeError, ValueError):
         return default
 
+def iso_date(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%d")
 
-def current_season_code() -> str:
-    now = datetime.now(timezone.utc)
-    year = now.year
-    start_year = year if now.month >= 7 else year - 1
-    return f"{start_year}{start_year + 1}"
-
-
-def today_nhl_date() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-
-def standings_map() -> dict[str, dict[str, Any]]:
-    data = fetch_json(f"{NHL_API}/standings/now", ttl=900)
-    rows: dict[str, dict[str, Any]] = {}
-    for row in data.get("standings", []):
-        abbr = row.get("teamAbbrev", {}).get("default")
-        if abbr:
-            rows[abbr] = row
-    return rows
-
-
-def team_name_map() -> dict[str, str]:
-    rows = standings_map()
-    return {
-        abbr: row.get("teamName", {}).get("default", abbr)
-        for abbr, row in rows.items()
-    }
-
-
-def get_teams() -> list[dict[str, str]]:
-    rows = standings_map()
-    items = []
-    for abbr, row in rows.items():
-        items.append(
-            {
-                "code": abbr,
-                "name": row.get("teamName", {}).get("default", abbr),
-                "logo": row.get("teamLogo"),
-                "darkLogo": row.get("teamLogoDark"),
-                "place": row.get("teamCommonName", {}).get("default", ""),
-            }
-        )
-    items.sort(key=lambda x: x["name"])
-    return items
-
-
-def parse_schedule_game(game: dict[str, Any], team_code: str) -> dict[str, Any]:
-    away = game.get("awayTeam", {}) or {}
-    home = game.get("homeTeam", {}) or {}
-    away_code = away.get("abbrev")
-    home_code = home.get("abbrev")
-    is_home = home_code == team_code
-
-    team_side = home if is_home else away
-    opp_side = away if is_home else home
-
-    team_score = int(team_side.get("score") or 0)
-    opp_score = int(opp_side.get("score") or 0)
-
-    game_state = str(game.get("gameState") or "")
-    completed = game_state == "OFF"
-
-    return {
-        "id": game.get("id"),
-        "gameType": game.get("gameType"),
-        "season": game.get("season"),
-        "gameDate": game.get("gameDate"),
-        "startTimeUTC": game.get("startTimeUTC"),
-        "venue": (game.get("venue") or {}).get("default", ""),
-        "isHome": is_home,
-        "teamCode": team_code,
-        "opponentCode": opp_side.get("abbrev"),
-        "opponentName": team_name_map().get(opp_side.get("abbrev", ""), opp_side.get("abbrev", "Opponent")),
-        "teamScore": team_score,
-        "opponentScore": opp_score,
-        "goalDiff": team_score - opp_score,
-        "status": game_state,
-        "gameScheduleState": game.get("gameScheduleState"),
-        "completed": completed,
-        "won": completed and team_score > opp_score,
-        "broadcasts": game.get("tvBroadcasts", []) or [],
-    }
-
-
-def get_team_schedule(team_code: str) -> list[dict[str, Any]]:
-    season = current_season_code()
-    data = fetch_json(f"{NHL_API}/club-schedule-season/{team_code}/{season}", ttl=600)
-    games = data.get("games") or []
-    parsed = [parse_schedule_game(g, team_code) for g in games]
-    parsed.sort(key=lambda g: ((g.get("gameDate") or ""), (g.get("startTimeUTC") or "")))
-    return parsed
-
-
-def get_boxscore(game_id: int) -> dict[str, Any]:
-    return fetch_json(f"{NHL_API}/gamecenter/{game_id}/boxscore", ttl=3600)
-
-
-def _players_from_side(side: dict[str, Any]) -> list[dict[str, Any]]:
-    players: list[dict[str, Any]] = []
-    for bucket in ("forwards", "defense", "goalies"):
-        players.extend(side.get(bucket, []) or [])
-    return players
-
-
-def get_team_points_leaders_for_game(game_id: int, team_code: str) -> list[dict[str, Any]]:
-    try:
-        box = get_boxscore(game_id)
-    except requests.RequestException:
-        return []
-
-    away = box.get("awayTeam", {}) or {}
-    home = box.get("homeTeam", {}) or {}
-    away_code = away.get("abbrev")
-    home_code = home.get("abbrev")
-    side = home if home_code == team_code else away if away_code == team_code else None
-
-    if not side:
-        return []
-
-    leaders = []
-    for p in _players_from_side(side):
-        goals = int(p.get("goals") or 0)
-        assists = int(p.get("assists") or 0)
-        points = goals + assists
-        if points <= 0:
-            continue
-        first = (p.get("firstName") or {}).get("default", "")
-        last = (p.get("lastName") or {}).get("default", "")
-        leaders.append(
-            {
-                "name": f"{first} {last}".strip() or (p.get("name") or {}).get("default", "Unknown"),
-                "goals": goals,
-                "assists": assists,
-                "points": points,
-                "position": p.get("position") or p.get("positionCode"),
-            }
-        )
-
-    leaders.sort(key=lambda x: (-x["points"], -x["goals"], x["name"]))
-    return leaders[:3]
-
-
-def enrich_completed_games(team_code: str, games: list[dict[str, Any]], limit: int = 8) -> list[dict[str, Any]]:
-    completed = [g for g in games if g["completed"]]
-    completed = sorted(completed, key=lambda g: g.get("gameDate") or "", reverse=True)[:limit]
-
-    results = []
-    for game in completed:
-        item = dict(game)
-        try:
-            item["pointsLeaders"] = get_team_points_leaders_for_game(game["id"], team_code)
-        except Exception:
-            item["pointsLeaders"] = []
-        results.append(item)
-    return results
-
-
-def recent_form_metrics(games: list[dict[str, Any]], n: int = 5) -> dict[str, float]:
-    completed = [g for g in games if g["completed"]]
-    completed = sorted(completed, key=lambda g: g.get("gameDate") or "", reverse=True)[:n]
-
-    if not completed:
-        return {
-            "win_pct": 0.5,
-            "avg_goal_diff": 0.0,
-            "avg_goals_for": 0.0,
-            "avg_goals_against": 0.0,
-            "games": 0,
-        }
-
-    wins = sum(1 for g in completed if g["won"])
-    goal_diff = sum(g["goalDiff"] for g in completed)
-    goals_for = sum(g["teamScore"] for g in completed)
-    goals_against = sum(g["opponentScore"] for g in completed)
-    count = len(completed)
-
-    return {
-        "win_pct": wins / count,
-        "avg_goal_diff": goal_diff / count,
-        "avg_goals_for": goals_for / count,
-        "avg_goals_against": goals_against / count,
-        "games": count,
-    }
-
-
-def home_away_form_metrics(games: list[dict[str, Any]], is_home: bool, n: int = 5) -> dict[str, float]:
-    filtered = [g for g in games if g["completed"] and g["isHome"] == is_home]
-    filtered = sorted(filtered, key=lambda g: g.get("gameDate") or "", reverse=True)[:n]
-
-    if not filtered:
-        return {"win_pct": 0.5, "avg_goal_diff": 0.0, "games": 0}
-
-    wins = sum(1 for g in filtered if g["won"])
-    goal_diff = sum(g["goalDiff"] for g in filtered)
-    count = len(filtered)
-
-    return {
-        "win_pct": wins / count,
-        "avg_goal_diff": goal_diff / count,
-        "games": count,
-    }
-
-
-def head_to_head_metrics(team_code: str, opponent_code: str, games: list[dict[str, Any]], n: int = 3) -> dict[str, float]:
-    h2h = [g for g in games if g["completed"] and g["opponentCode"] == opponent_code]
-    h2h = sorted(h2h, key=lambda g: g.get("gameDate") or "", reverse=True)[:n]
-
-    if not h2h:
-        return {"win_pct": 0.5, "avg_goal_diff": 0.0, "games": 0}
-
-    wins = sum(1 for g in h2h if g["won"])
-    gd = sum(g["goalDiff"] for g in h2h)
-
-    return {
-        "win_pct": wins / len(h2h),
-        "avg_goal_diff": gd / len(h2h),
-        "games": len(h2h),
-    }
-
-
-def rest_days_before_game(schedule: list[dict[str, Any]], game: dict[str, Any]) -> int:
-    completed = [g for g in schedule if g["completed"] and (g.get("gameDate") or "") < (game.get("gameDate") or "")]
-    if not completed:
-        return 7
-
-    last_game = sorted(completed, key=lambda g: g.get("gameDate") or "", reverse=True)[0]
-    try:
-        d1 = datetime.fromisoformat(str(last_game["gameDate"]))
-        d2 = datetime.fromisoformat(str(game["gameDate"]))
-        days = (d2 - d1).days - 1
-        return max(-1, min(days, 7))
-    except Exception:
-        return 1
-
-
-def standings_strength(team_code: str) -> dict[str, float]:
-    row = standings_map().get(team_code, {})
-    points_pct = _safe_num(row.get("pointPctg"), 0.5)
-    gfpg = _safe_num(row.get("goalForPerGame"), 3.0)
-    gapg = _safe_num(row.get("goalAgainstPerGame"), 3.0)
-    wins = _safe_num(row.get("wins"), 0.0)
-    losses = _safe_num(row.get("losses"), 0.0)
-    ot_losses = _safe_num(row.get("otLosses"), 0.0)
-
-    return {
-        "points_pct": points_pct,
-        "goal_diff_per_game": gfpg - gapg,
-        "gfpg": gfpg,
-        "gapg": gapg,
-        "wins": wins,
-        "losses": losses,
-        "ot_losses": ot_losses,
-    }
-
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 def logistic(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
+def current_mlb_season() -> int:
+    return utc_now().year
 
-def build_prediction(team_code: str, schedule: list[dict[str, Any]], opponent_code: str | None = None) -> dict[str, Any] | None:
-    upcoming = [g for g in schedule if not g["completed"]]
-    if opponent_code:
-        upcoming = [g for g in upcoming if g["opponentCode"] == opponent_code]
-    if not upcoming:
-        return None
+def current_nhl_season_code() -> str:
+    now = utc_now()
+    start_year = now.year if now.month >= 7 else now.year - 1
+    return f"{start_year}{start_year + 1}"
 
-    game = sorted(upcoming, key=lambda g: ((g.get("gameDate") or ""), (g.get("startTimeUTC") or "")))[0]
-    opp = game["opponentCode"]
-    if not opp:
-        return None
+def today_and_tomorrow() -> list[str]:
+    today = utc_now().date()
+    return [iso_date(datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)),
+            iso_date(datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc))]
 
-    opp_schedule = get_team_schedule(opp)
+# ---------------- NHL ----------------
 
-    team_form = recent_form_metrics(schedule, n=5)
-    opp_form = recent_form_metrics(opp_schedule, n=5)
+def nhl_standings_map() -> dict[str, dict[str, Any]]:
+    data = fetch_json(f"{NHL_API}/standings/now", ttl=BOARD_TTL)
+    out: dict[str, dict[str, Any]] = {}
+    for row in data.get("standings", []):
+        code = (row.get("teamAbbrev") or {}).get("default")
+        if code:
+            out[code] = row
+    return out
 
-    team_split = home_away_form_metrics(schedule, is_home=game["isHome"], n=5)
-    opp_split = home_away_form_metrics(opp_schedule, is_home=not game["isHome"], n=5)
+def nhl_team_name(code: str) -> str:
+    row = nhl_standings_map().get(code, {})
+    return (row.get("teamName") or {}).get("default", code)
 
-    team_h2h = head_to_head_metrics(team_code, opp, schedule, n=3)
-    team_strength = standings_strength(team_code)
-    opp_strength = standings_strength(opp)
+def nhl_schedule_for_date(date_code: str) -> list[dict[str, Any]]:
+    data = fetch_json(f"{NHL_API}/schedule/{date_code}", ttl=SCORES_TTL)
+    out = []
+    for day in data.get("gameWeek", []) or []:
+        if day.get("date") != date_code:
+            continue
+        for g in day.get("games", []) or []:
+            away = g.get("awayTeam") or {}
+            home = g.get("homeTeam") or {}
+            state = str(g.get("gameState") or "")
+            out.append({
+                "sport": "nhl",
+                "id": g.get("id"),
+                "date": date_code,
+                "startTimeUTC": g.get("startTimeUTC"),
+                "status": state,
+                "statusText": state,
+                "awayCode": away.get("abbrev"),
+                "homeCode": home.get("abbrev"),
+                "awayName": nhl_team_name(away.get("abbrev", "")),
+                "homeName": nhl_team_name(home.get("abbrev", "")),
+                "awayScore": int(away.get("score") or 0),
+                "homeScore": int(home.get("score") or 0),
+                "venue": (g.get("venue") or {}).get("default", ""),
+                "isLive": state in {"LIVE", "CRIT", "OFF", "FUT", "PRE"},
+            })
+    out.sort(key=lambda x: x.get("startTimeUTC") or "")
+    return out
 
-    team_rest = rest_days_before_game(schedule, game)
-    opp_rest = rest_days_before_game(opp_schedule, game)
-
-    score = 0.0
-    score += (team_strength["points_pct"] - opp_strength["points_pct"]) * 3.2
-    score += (team_strength["goal_diff_per_game"] - opp_strength["goal_diff_per_game"]) * 0.9
-    score += (team_form["win_pct"] - opp_form["win_pct"]) * 1.5
-    score += (team_form["avg_goal_diff"] - opp_form["avg_goal_diff"]) * 0.45
-    score += (team_split["win_pct"] - opp_split["win_pct"]) * 0.8
-    score += (team_split["avg_goal_diff"] - opp_split["avg_goal_diff"]) * 0.2
-    score += (team_h2h["win_pct"] - 0.5) * 0.8
-    score += team_h2h["avg_goal_diff"] * 0.15
-    score += (team_rest - opp_rest) * 0.08
-
-    if game["isHome"]:
-        score += 0.18
-
-    probability = logistic(score)
-    predicted_winner = team_code if probability >= 0.5 else opp
-    predicted_loser = opp if predicted_winner == team_code else team_code
-    confidence = abs(probability - 0.5) * 200
-
-    reasons = []
-    if team_strength["points_pct"] > opp_strength["points_pct"]:
-        reasons.append(f"better standings points % ({team_strength['points_pct']:.3f} vs {opp_strength['points_pct']:.3f})")
-    else:
-        reasons.append(f"worse standings points % ({team_strength['points_pct']:.3f} vs {opp_strength['points_pct']:.3f})")
-
-    if team_form["avg_goal_diff"] > opp_form["avg_goal_diff"]:
-        reasons.append("better recent goal differential")
-    else:
-        reasons.append("worse recent goal differential")
-
-    if team_split["win_pct"] > opp_split["win_pct"]:
-        reasons.append("better current home/road split form")
-    else:
-        reasons.append("worse current home/road split form")
-
-    if team_rest > opp_rest:
-        reasons.append("more rest before game")
-    elif team_rest < opp_rest:
-        reasons.append("less rest before game")
-
-    if game["isHome"]:
-        reasons.append("home ice")
-
-    return {
-        "game": game,
-        "team": team_code,
-        "opponent": opp,
-        "predictedWinner": predicted_winner,
-        "predictedLoser": predicted_loser,
-        "teamWinProbability": round(probability * 100, 1),
-        "opponentWinProbability": round((1 - probability) * 100, 1),
-        "confidence": round(confidence, 1),
-        "reasonSummary": reasons,
-        "inputs": {
-            "teamForm": team_form,
-            "opponentForm": opp_form,
-            "headToHead": team_h2h,
-            "teamStrength": team_strength,
-            "opponentStrength": opp_strength,
-            "teamSplit": team_split,
-            "opponentSplit": opp_split,
-            "teamRestDays": team_rest,
-            "opponentRestDays": opp_rest,
-        },
-    }
-
-
-def team_payload(team_code: str, opponent_code: str | None = None) -> dict[str, Any]:
-    code = team_code.upper()
-    rows = standings_map()
-
-    if code not in rows:
-        return {"error": f"Unknown team code: {code}"}
-
-    schedule = get_team_schedule(code)
-    completed = [g for g in schedule if g["completed"]]
-    upcoming = [g for g in schedule if not g["completed"]]
-    opponents = sorted({g["opponentCode"] for g in schedule if g.get("opponentCode")})
-
-    filtered_schedule = schedule
-    if opponent_code:
-        opponent_code = opponent_code.upper()
-        filtered_schedule = [g for g in schedule if g["opponentCode"] == opponent_code]
-
-    detail_games = enrich_completed_games(code, filtered_schedule, limit=8)
-    next_games = sorted(
-        [g for g in filtered_schedule if not g["completed"]],
-        key=lambda g: ((g.get("gameDate") or ""), (g.get("startTimeUTC") or ""))
-    )[:5]
-
-    prediction = build_prediction(code, schedule, opponent_code=opponent_code)
-
-    row = rows[code]
-    return {
-        "team": row.get("teamName", {}).get("default", code),
-        "code": code,
-        "logo": row.get("teamLogo"),
-        "standing": {
-            "leagueSequence": row.get("leagueSequence"),
-            "conferenceSequence": row.get("conferenceSequence"),
-            "divisionSequence": row.get("divisionSequence"),
-            "points": row.get("points"),
-            "wins": row.get("wins"),
-            "losses": row.get("losses"),
-            "otLosses": row.get("otLosses"),
-            "pointPctg": row.get("pointPctg"),
-            "goalForPerGame": row.get("goalForPerGame"),
-            "goalAgainstPerGame": row.get("goalAgainstPerGame"),
-        },
-        "totals": {
-            "gamesPlayed": len(schedule),
-            "completed": len(completed),
-            "upcoming": len(upcoming),
-        },
-        "crossReferenceOptions": opponents,
-        "recentGames": detail_games,
-        "upcomingGames": next_games,
-        "prediction": prediction,
-    }
-
-
-def parse_today_game(game: dict[str, Any]) -> dict[str, Any]:
-    away = game.get("awayTeam", {}) or {}
-    home = game.get("homeTeam", {}) or {}
-    return {
-        "id": game.get("id"),
-        "gameDate": game.get("gameDate"),
-        "startTimeUTC": game.get("startTimeUTC"),
-        "gameState": game.get("gameState"),
-        "awayCode": away.get("abbrev"),
-        "homeCode": home.get("abbrev"),
-        "awayName": team_name_map().get(away.get("abbrev", ""), away.get("abbrev", "Away")),
-        "homeName": team_name_map().get(home.get("abbrev", ""), home.get("abbrev", "Home")),
-        "awayScore": int(away.get("score") or 0),
-        "homeScore": int(home.get("score") or 0),
-        "venue": (game.get("venue") or {}).get("default", ""),
-    }
-
-
-def get_today_games() -> list[dict[str, Any]]:
-    date_code = today_nhl_date()
-    data = fetch_json(f"{NHL_API}/schedule/{date_code}", ttl=120)
+def nhl_team_schedule(team_code: str) -> list[dict[str, Any]]:
+    season = current_nhl_season_code()
+    data = fetch_json(f"{NHL_API}/club-schedule-season/{team_code}/{season}", ttl=PREDICTIONS_TTL)
     games = []
-    game_week = data.get("gameWeek") or []
-    for day in game_week:
-        if day.get("date") == date_code:
-            for game in day.get("games") or []:
-                games.append(parse_today_game(game))
-            break
-
-    games.sort(key=lambda g: (g.get("startTimeUTC") or ""))
+    for g in data.get("games", []) or []:
+        away = g.get("awayTeam") or {}
+        home = g.get("homeTeam") or {}
+        is_home = home.get("abbrev") == team_code
+        team_side = home if is_home else away
+        opp_side = away if is_home else home
+        status = str(g.get("gameState") or "")
+        games.append({
+            "id": g.get("id"),
+            "gameDate": g.get("gameDate"),
+            "startTimeUTC": g.get("startTimeUTC"),
+            "completed": status == "OFF",
+            "isHome": is_home,
+            "opponentCode": opp_side.get("abbrev"),
+            "teamScore": int(team_side.get("score") or 0),
+            "oppScore": int(opp_side.get("score") or 0),
+            "goalDiff": int(team_side.get("score") or 0) - int(opp_side.get("score") or 0),
+            "won": status == "OFF" and int(team_side.get("score") or 0) > int(opp_side.get("score") or 0),
+        })
+    games.sort(key=lambda x: ((x.get("gameDate") or ""), (x.get("startTimeUTC") or "")))
     return games
 
+def nhl_recent_metrics(team_code: str, n: int = 8) -> dict[str, float]:
+    schedule = nhl_team_schedule(team_code)
+    done = [g for g in schedule if g["completed"]]
+    recent = sorted(done, key=lambda g: g["gameDate"], reverse=True)[:n]
+    if not recent:
+        return {"win_pct": 0.5, "avg_gd": 0.0, "gf": 3.0, "ga": 3.0}
+    count = len(recent)
+    return {
+        "win_pct": sum(1 for g in recent if g["won"]) / count,
+        "avg_gd": sum(g["goalDiff"] for g in recent) / count,
+        "gf": sum(g["teamScore"] for g in recent) / count,
+        "ga": sum(g["oppScore"] for g in recent) / count,
+    }
+
+def nhl_split_metrics(team_code: str, home: bool, n: int = 6) -> dict[str, float]:
+    schedule = nhl_team_schedule(team_code)
+    games = [g for g in schedule if g["completed"] and g["isHome"] == home]
+    recent = sorted(games, key=lambda g: g["gameDate"], reverse=True)[:n]
+    if not recent:
+        return {"win_pct": 0.5, "avg_gd": 0.0}
+    count = len(recent)
+    return {
+        "win_pct": sum(1 for g in recent if g["won"]) / count,
+        "avg_gd": sum(g["goalDiff"] for g in recent) / count,
+    }
+
+def nhl_head_to_head(team_code: str, opp_code: str, n: int = 4) -> dict[str, float]:
+    games = [g for g in nhl_team_schedule(team_code) if g["completed"] and g["opponentCode"] == opp_code]
+    recent = sorted(games, key=lambda g: g["gameDate"], reverse=True)[:n]
+    if not recent:
+        return {"win_pct": 0.5, "avg_gd": 0.0}
+    count = len(recent)
+    return {
+        "win_pct": sum(1 for g in recent if g["won"]) / count,
+        "avg_gd": sum(g["goalDiff"] for g in recent) / count,
+    }
+
+def nhl_rest_days(team_code: str, game_date: str) -> int:
+    done = [g for g in nhl_team_schedule(team_code) if g["completed"] and (g["gameDate"] or "") < game_date]
+    if not done:
+        return 5
+    last = sorted(done, key=lambda g: g["gameDate"], reverse=True)[0]
+    try:
+        d1 = datetime.fromisoformat(last["gameDate"])
+        d2 = datetime.fromisoformat(game_date)
+        return max(-1, min((d2 - d1).days - 1, 7))
+    except Exception:
+        return 1
+
+def nhl_strength(team_code: str) -> dict[str, float]:
+    row = nhl_standings_map().get(team_code, {})
+    return {
+        "points_pct": safe_float(row.get("pointPctg"), 0.5),
+        "gfpg": safe_float(row.get("goalForPerGame"), 3.0),
+        "gapg": safe_float(row.get("goalAgainstPerGame"), 3.0),
+        "goal_diff_pg": safe_float(row.get("goalForPerGame"), 3.0) - safe_float(row.get("goalAgainstPerGame"), 3.0),
+    }
+
+def nhl_build_insight(game: dict[str, Any]) -> dict[str, Any]:
+    away = game["awayCode"]
+    home = game["homeCode"]
+    if not away or not home:
+        return {"error": "Missing team code."}
+
+    away_strength = nhl_strength(away)
+    home_strength = nhl_strength(home)
+    away_recent = nhl_recent_metrics(away)
+    home_recent = nhl_recent_metrics(home)
+    away_road = nhl_split_metrics(away, home=False)
+    home_home = nhl_split_metrics(home, home=True)
+    home_h2h = nhl_head_to_head(home, away)
+    away_rest = nhl_rest_days(away, game["date"])
+    home_rest = nhl_rest_days(home, game["date"])
+
+    score = 0.0
+    score += (home_strength["points_pct"] - away_strength["points_pct"]) * 3.4
+    score += (home_strength["goal_diff_pg"] - away_strength["goal_diff_pg"]) * 0.9
+    score += (home_recent["win_pct"] - away_recent["win_pct"]) * 1.4
+    score += (home_recent["avg_gd"] - away_recent["avg_gd"]) * 0.35
+    score += (home_home["win_pct"] - away_road["win_pct"]) * 0.8
+    score += (home_home["avg_gd"] - away_road["avg_gd"]) * 0.25
+    score += (home_h2h["win_pct"] - 0.5) * 0.7
+    score += home_h2h["avg_gd"] * 0.15
+    score += (home_rest - away_rest) * 0.08
+    score += 0.18
+
+    home_prob = logistic(score)
+    predicted_winner = home if home_prob >= 0.5 else away
+    predicted_loser = away if predicted_winner == home else home
+    confidence = round(abs(home_prob - 0.5) * 200, 1)
+
+    tier = "tight" if confidence < 8 else "lean" if confidence < 16 else "strong"
+    color = "yellow" if tier == "tight" else "green"
+
+    projected_total = round(max(4.5, min(8.5,
+        (home_strength["gfpg"] + away_strength["gfpg"] + home_strength["gapg"] + away_strength["gapg"]) / 2
+        + (home_recent["gf"] + away_recent["gf"] - home_recent["ga"] - away_recent["ga"]) * 0.08
+    )), 1)
+
+    likely_point_team = home if home_prob >= 0.5 else away
+    reasons = [
+        {"label": "Standings edge", "text": f"{predicted_winner} has the better standings profile." if confidence >= 8 else "The standings gap is small."},
+        {"label": "Recent form", "text": f"{home} recent win% {home_recent['win_pct']:.3f} vs {away} {away_recent['win_pct']:.3f}."},
+        {"label": "Home / road split", "text": f"{home} home form {home_home['win_pct']:.3f}; {away} road form {away_road['win_pct']:.3f}."},
+        {"label": "Head-to-head", "text": f"{home} H2H edge {home_h2h['win_pct']:.3f} over last meetings."},
+        {"label": "Rest", "text": f"{home} rest {home_rest} days, {away} rest {away_rest} days."},
+    ]
+
+    return {
+        "sport": "nhl",
+        "gameId": game["id"],
+        "date": game["date"],
+        "awayCode": away,
+        "homeCode": home,
+        "awayName": game["awayName"],
+        "homeName": game["homeName"],
+        "startTimeUTC": game["startTimeUTC"],
+        "venue": game["venue"],
+        "live": {
+            "status": game["status"],
+            "awayScore": game["awayScore"],
+            "homeScore": game["homeScore"],
+        },
+        "predictedWinner": predicted_winner,
+        "predictedLoser": predicted_loser,
+        "homeWinProbability": round(home_prob * 100, 1),
+        "awayWinProbability": round((1 - home_prob) * 100, 1),
+        "confidence": confidence,
+        "tier": tier,
+        "cardColor": color,
+        "projectedTotal": projected_total,
+        "likelyPointTeam": likely_point_team,
+        "reasons": reasons,
+        "lastPredictionRefreshUTC": utc_now().isoformat(),
+    }
+
+# ---------------- MLB ----------------
+
+def mlb_team_records() -> dict[int, dict[str, Any]]:
+    season = current_mlb_season()
+    data = fetch_json(f"{MLB_API}/standings?leagueId=103,104&season={season}", ttl=BOARD_TTL)
+    out: dict[int, dict[str, Any]] = {}
+    for rec in data.get("records", []) or []:
+        for row in rec.get("teamRecords", []) or []:
+            team = row.get("team") or {}
+            team_id = team.get("id")
+            if team_id:
+                out[int(team_id)] = row
+    return out
+
+def mlb_schedule_for_date(date_code: str) -> list[dict[str, Any]]:
+    url = f"{MLB_API}/schedule?sportId=1&date={date_code}&hydrate=linescore,probablePitcher,team"
+    data = fetch_json(url, ttl=SCORES_TTL)
+    games = []
+    for date_row in data.get("dates", []) or []:
+        for g in date_row.get("games", []) or []:
+            teams = g.get("teams") or {}
+            away = (teams.get("away") or {}).get("team") or {}
+            home = (teams.get("home") or {}).get("team") or {}
+            linescore = g.get("linescore") or {}
+            status = (g.get("status") or {}).get("detailedState") or (g.get("status") or {}).get("abstractGameState") or ""
+            games.append({
+                "sport": "mlb",
+                "id": g.get("gamePk"),
+                "date": date_code,
+                "startTimeUTC": g.get("gameDate"),
+                "status": status,
+                "statusText": status,
+                "awayId": away.get("id"),
+                "homeId": home.get("id"),
+                "awayCode": away.get("abbreviation") or away.get("name", "AWY")[:3].upper(),
+                "homeCode": home.get("abbreviation") or home.get("name", "HME")[:3].upper(),
+                "awayName": away.get("name", "Away"),
+                "homeName": home.get("name", "Home"),
+                "awayScore": int(((teams.get("away") or {}).get("score")) or 0),
+                "homeScore": int(((teams.get("home") or {}).get("score")) or 0),
+                "venue": ((g.get("venue") or {}).get("name")) or "",
+                "awayProbablePitcher": ((teams.get("away") or {}).get("probablePitcher") or {}).get("fullName", ""),
+                "homeProbablePitcher": ((teams.get("home") or {}).get("probablePitcher") or {}).get("fullName", ""),
+                "inningState": linescore.get("inningState") or "",
+                "currentInning": linescore.get("currentInning") or "",
+            })
+    games.sort(key=lambda x: x.get("startTimeUTC") or "")
+    return games
+
+def mlb_team_schedule(team_id: int) -> list[dict[str, Any]]:
+    season = current_mlb_season()
+    url = f"{MLB_API}/schedule?sportId=1&teamId={team_id}&season={season}&hydrate=linescore,team"
+    data = fetch_json(url, ttl=PREDICTIONS_TTL)
+    out = []
+    for date_row in data.get("dates", []) or []:
+        for g in date_row.get("games", []) or []:
+            teams = g.get("teams") or {}
+            away = (teams.get("away") or {}).get("team") or {}
+            home = (teams.get("home") or {}).get("team") or {}
+            is_home = home.get("id") == team_id
+            team_side = teams.get("home") if is_home else teams.get("away")
+            opp_side = teams.get("away") if is_home else teams.get("home")
+            status = (g.get("status") or {}).get("abstractGameCode") or ""
+            out.append({
+                "gameDate": date_row.get("date"),
+                "completed": status == "F",
+                "isHome": is_home,
+                "oppId": ((opp_side or {}).get("team") or {}).get("id"),
+                "teamScore": int((team_side or {}).get("score") or 0),
+                "oppScore": int((opp_side or {}).get("score") or 0),
+                "runDiff": int((team_side or {}).get("score") or 0) - int((opp_side or {}).get("score") or 0),
+                "won": status == "F" and int((team_side or {}).get("score") or 0) > int((opp_side or {}).get("score") or 0),
+            })
+    out.sort(key=lambda x: x["gameDate"])
+    return out
+
+def mlb_strength(team_id: int) -> dict[str, float]:
+    row = mlb_team_records().get(team_id, {})
+    wins = safe_float(row.get("wins"), 0.0)
+    losses = safe_float(row.get("losses"), 0.0)
+    pct = safe_float(row.get("winningPercentage"), 0.5)
+    runs_scored = safe_float(row.get("runsScored"), 0.0)
+    runs_allowed = safe_float(row.get("runsAllowed"), 0.0)
+    games = max(1.0, wins + losses)
+    return {
+        "win_pct": pct if pct > 0 else (wins / games if games else 0.5),
+        "run_diff_pg": (runs_scored - runs_allowed) / games,
+    }
+
+def mlb_recent_metrics(team_id: int, n: int = 10) -> dict[str, float]:
+    games = [g for g in mlb_team_schedule(team_id) if g["completed"]]
+    recent = sorted(games, key=lambda x: x["gameDate"], reverse=True)[:n]
+    if not recent:
+        return {"win_pct": 0.5, "avg_rd": 0.0, "rf": 4.5, "ra": 4.5}
+    c = len(recent)
+    return {
+        "win_pct": sum(1 for g in recent if g["won"]) / c,
+        "avg_rd": sum(g["runDiff"] for g in recent) / c,
+        "rf": sum(g["teamScore"] for g in recent) / c,
+        "ra": sum(g["oppScore"] for g in recent) / c,
+    }
+
+def mlb_split_metrics(team_id: int, home: bool, n: int = 8) -> dict[str, float]:
+    games = [g for g in mlb_team_schedule(team_id) if g["completed"] and g["isHome"] == home]
+    recent = sorted(games, key=lambda x: x["gameDate"], reverse=True)[:n]
+    if not recent:
+        return {"win_pct": 0.5, "avg_rd": 0.0}
+    c = len(recent)
+    return {
+        "win_pct": sum(1 for g in recent if g["won"]) / c,
+        "avg_rd": sum(g["runDiff"] for g in recent) / c,
+    }
+
+def mlb_head_to_head(team_id: int, opp_id: int, n: int = 6) -> dict[str, float]:
+    games = [g for g in mlb_team_schedule(team_id) if g["completed"] and g["oppId"] == opp_id]
+    recent = sorted(games, key=lambda x: x["gameDate"], reverse=True)[:n]
+    if not recent:
+        return {"win_pct": 0.5, "avg_rd": 0.0}
+    c = len(recent)
+    return {
+        "win_pct": sum(1 for g in recent if g["won"]) / c,
+        "avg_rd": sum(g["runDiff"] for g in recent) / c,
+    }
+
+def mlb_rest_days(team_id: int, game_date: str) -> int:
+    games = [g for g in mlb_team_schedule(team_id) if g["completed"] and g["gameDate"] < game_date]
+    if not games:
+        return 2
+    last = sorted(games, key=lambda x: x["gameDate"], reverse=True)[0]
+    try:
+        d1 = datetime.fromisoformat(last["gameDate"])
+        d2 = datetime.fromisoformat(game_date)
+        return max(0, min((d2 - d1).days - 1, 4))
+    except Exception:
+        return 1
+
+def mlb_build_insight(game: dict[str, Any]) -> dict[str, Any]:
+    away_id = int(game["awayId"])
+    home_id = int(game["homeId"])
+    away_strength = mlb_strength(away_id)
+    home_strength = mlb_strength(home_id)
+    away_recent = mlb_recent_metrics(away_id)
+    home_recent = mlb_recent_metrics(home_id)
+    away_road = mlb_split_metrics(away_id, home=False)
+    home_home = mlb_split_metrics(home_id, home=True)
+    home_h2h = mlb_head_to_head(home_id, away_id)
+    away_rest = mlb_rest_days(away_id, game["date"])
+    home_rest = mlb_rest_days(home_id, game["date"])
+
+    score = 0.0
+    score += (home_strength["win_pct"] - away_strength["win_pct"]) * 3.2
+    score += (home_strength["run_diff_pg"] - away_strength["run_diff_pg"]) * 0.9
+    score += (home_recent["win_pct"] - away_recent["win_pct"]) * 1.2
+    score += (home_recent["avg_rd"] - away_recent["avg_rd"]) * 0.25
+    score += (home_home["win_pct"] - away_road["win_pct"]) * 0.7
+    score += (home_home["avg_rd"] - away_road["avg_rd"]) * 0.18
+    score += (home_h2h["win_pct"] - 0.5) * 0.5
+    score += home_h2h["avg_rd"] * 0.12
+    score += (home_rest - away_rest) * 0.08
+    score += 0.15
+    if game.get("homeProbablePitcher") and not game.get("awayProbablePitcher"):
+        score += 0.08
+    elif game.get("awayProbablePitcher") and not game.get("homeProbablePitcher"):
+        score -= 0.08
+
+    home_prob = logistic(score)
+    predicted_winner = game["homeCode"] if home_prob >= 0.5 else game["awayCode"]
+    predicted_loser = game["awayCode"] if predicted_winner == game["homeCode"] else game["homeCode"]
+    confidence = round(abs(home_prob - 0.5) * 200, 1)
+    tier = "tight" if confidence < 8 else "lean" if confidence < 16 else "strong"
+    color = "yellow" if tier == "tight" else "green"
+
+    projected_total = round(max(6.5, min(12.5,
+        (home_recent["rf"] + away_recent["rf"] + home_recent["ra"] + away_recent["ra"]) / 2
+    )), 1)
+
+    reasons = [
+        {"label": "Team strength", "text": f"{predicted_winner} carries the stronger season profile." if confidence >= 8 else "The season gap is small."},
+        {"label": "Recent form", "text": f"{game['homeCode']} recent win% {home_recent['win_pct']:.3f}; {game['awayCode']} {away_recent['win_pct']:.3f}."},
+        {"label": "Home / road split", "text": f"{game['homeCode']} home {home_home['win_pct']:.3f}; {game['awayCode']} road {away_road['win_pct']:.3f}."},
+        {"label": "Probable pitchers", "text": f"{game.get('awayProbablePitcher') or 'TBD'} vs {game.get('homeProbablePitcher') or 'TBD'}."},
+        {"label": "Rest", "text": f"{game['homeCode']} rest {home_rest} days, {game['awayCode']} rest {away_rest} days."},
+    ]
+
+    return {
+        "sport": "mlb",
+        "gameId": game["id"],
+        "date": game["date"],
+        "awayCode": game["awayCode"],
+        "homeCode": game["homeCode"],
+        "awayName": game["awayName"],
+        "homeName": game["homeName"],
+        "startTimeUTC": game["startTimeUTC"],
+        "venue": game["venue"],
+        "live": {
+            "status": game["status"],
+            "awayScore": game["awayScore"],
+            "homeScore": game["homeScore"],
+        },
+        "predictedWinner": predicted_winner,
+        "predictedLoser": predicted_loser,
+        "homeWinProbability": round(home_prob * 100, 1),
+        "awayWinProbability": round((1 - home_prob) * 100, 1),
+        "confidence": confidence,
+        "tier": tier,
+        "cardColor": color,
+        "projectedTotal": projected_total,
+        "likelyImpactPlayerTeam": predicted_winner,
+        "probablePitchers": {
+            "away": game.get("awayProbablePitcher", ""),
+            "home": game.get("homeProbablePitcher", ""),
+        },
+        "reasons": reasons,
+        "lastPredictionRefreshUTC": utc_now().isoformat(),
+    }
+
+# ---------------- Unified board / insights ----------------
+
+def board_payload(sport: str) -> dict[str, Any]:
+    dates = today_and_tomorrow()
+    days = []
+    for date_code in dates:
+        games = nhl_schedule_for_date(date_code) if sport == "nhl" else mlb_schedule_for_date(date_code)
+        days.append({"date": date_code, "label": "Day 1" if not days else "Day 2", "games": games})
+    return {
+        "sport": sport,
+        "days": days,
+        "refreshWindows": {
+            "scoresSeconds": SCORES_TTL,
+            "predictionsSeconds": PREDICTIONS_TTL,
+            "boardSeconds": BOARD_TTL,
+        },
+        "generatedAtUTC": utc_now().isoformat(),
+    }
+
+def insights_payload(sport: str) -> dict[str, Any]:
+    board = board_payload(sport)
+    insights = []
+    for day in board["days"]:
+        for game in day["games"]:
+            try:
+                insight = nhl_build_insight(game) if sport == "nhl" else mlb_build_insight(game)
+                insights.append(insight)
+            except Exception as exc:
+                insights.append({
+                    "sport": sport,
+                    "gameId": game.get("id"),
+                    "date": game.get("date"),
+                    "awayCode": game.get("awayCode"),
+                    "homeCode": game.get("homeCode"),
+                    "error": str(exc),
+                    "startTimeUTC": game.get("startTimeUTC"),
+                    "live": {"status": game.get("status"), "awayScore": game.get("awayScore"), "homeScore": game.get("homeScore")},
+                })
+    insights.sort(key=lambda x: ((x.get("date") or ""), (x.get("startTimeUTC") or "")))
+    return {
+        "sport": sport,
+        "insights": insights,
+        "generatedAtUTC": utc_now().isoformat(),
+        "refreshWindows": {
+            "scoresSeconds": SCORES_TTL,
+            "predictionsSeconds": PREDICTIONS_TTL,
+            "boardSeconds": BOARD_TTL,
+        },
+    }
 
 @app.get("/")
 def index() -> str:
     return render_template("index.html")
 
-
 @app.get("/api/health")
 def api_health() -> Any:
-    return jsonify({"ok": True, "time": datetime.now(timezone.utc).isoformat()})
+    return jsonify({"ok": True, "time": utc_now().isoformat()})
 
-
-@app.get("/api/teams")
-def api_teams() -> Any:
+@app.get("/api/board/<sport>")
+def api_board(sport: str) -> Any:
+    sport = sport.lower()
+    if sport not in {"nhl", "mlb"}:
+        return jsonify({"error": "Unsupported sport"}), 400
     try:
-        return jsonify({"teams": get_teams(), "season": current_season_code()})
+        return jsonify(board_payload(sport))
     except Exception as exc:
-        return jsonify({"error": str(exc), "teams": [], "season": current_season_code()}), 500
+        return jsonify({"error": str(exc), "days": []}), 500
 
-
-@app.get("/api/team/<team_code>")
-def api_team(team_code: str) -> Any:
-    opponent = request.args.get("opponent", "").strip() or None
+@app.get("/api/insights/<sport>")
+def api_insights(sport: str) -> Any:
+    sport = sport.lower()
+    if sport not in {"nhl", "mlb"}:
+        return jsonify({"error": "Unsupported sport"}), 400
     try:
-        payload = team_payload(team_code, opponent)
-        status = 400 if payload.get("error") else 200
-        return jsonify(payload), status
+        return jsonify(insights_payload(sport))
     except Exception as exc:
-        return jsonify({"error": f"Could not load team data: {exc}"}), 500
-
-
-@app.get("/api/predictions")
-def api_predictions() -> Any:
-    try:
-        teams = get_teams()
-        results = []
-
-        for t in teams:
-            try:
-                payload = team_payload(t["code"])
-                pred = payload.get("prediction")
-                if not pred:
-                    continue
-                results.append(
-                    {
-                        "team": payload["team"],
-                        "code": t["code"],
-                        "logo": payload.get("logo"),
-                        "nextGame": pred["game"],
-                        "predictedWinner": pred["predictedWinner"],
-                        "teamWinProbability": pred["teamWinProbability"],
-                        "confidence": pred["confidence"],
-                    }
-                )
-            except Exception:
-                continue
-
-        results.sort(key=lambda x: ((x["nextGame"].get("gameDate") or ""), -x["confidence"]))
-        return jsonify({"predictions": results[:16]})
-    except Exception as exc:
-        return jsonify({"error": str(exc), "predictions": []}), 500
-
-
-@app.get("/api/today")
-def api_today() -> Any:
-    try:
-        return jsonify({"date": today_nhl_date(), "games": get_today_games()})
-    except Exception as exc:
-        return jsonify({"error": str(exc), "date": today_nhl_date(), "games": []}), 500
-
+        return jsonify({"error": str(exc), "insights": []}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
