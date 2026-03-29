@@ -30,9 +30,10 @@
       color:var(--text);
       min-height:100vh;
       background:
-        radial-gradient(circle at top left, rgba(96,165,250,.14), transparent 30%),
-        radial-gradient(circle at top right, rgba(34,197,94,.10), transparent 25%),
-        linear-gradient(180deg,#03101d 0%,#081625 100%);
+        radial-gradient(circle at 50% -10%, rgba(191,230,255,.22), transparent 38%),
+        radial-gradient(circle at 15% 10%, rgba(125,211,252,.14), transparent 28%),
+        radial-gradient(circle at 85% 8%, rgba(96,165,250,.12), transparent 24%),
+        linear-gradient(180deg,#02101b 0%, #072036 45%, #091a2b 100%);
       background-attachment:fixed;
       position:relative;
       overflow-x:hidden;
@@ -45,15 +46,6 @@
       inset:0;
       pointer-events:none;
       z-index:0;
-    }
-
-    body.theme-nhl{
-      background:
-        radial-gradient(circle at 50% -10%, rgba(191,230,255,.22), transparent 38%),
-        radial-gradient(circle at 15% 10%, rgba(125,211,252,.14), transparent 28%),
-        radial-gradient(circle at 85% 8%, rgba(96,165,250,.12), transparent 24%),
-        linear-gradient(180deg,#02101b 0%, #072036 45%, #091a2b 100%);
-      background-attachment:fixed;
     }
 
     body.theme-nhl::before{
@@ -78,7 +70,6 @@
         radial-gradient(circle at 12% 8%, rgba(34,197,94,.10), transparent 28%),
         radial-gradient(circle at 88% 10%, rgba(96,165,250,.08), transparent 26%),
         linear-gradient(180deg,#08140b 0%, #0d2915 42%, #122014 100%);
-      background-attachment:fixed;
     }
 
     body.theme-mlb::before{
@@ -155,15 +146,8 @@
       background:linear-gradient(180deg, rgba(255,255,255,.05), transparent 34%);
     }
 
-    .hero.top-accent-nhl{
-      box-shadow:0 18px 50px rgba(96,165,250,.20);
-      border-color:rgba(191,230,255,.18);
-    }
-
-    .hero.top-accent-mlb{
-      box-shadow:0 18px 50px rgba(34,197,94,.18);
-      border-color:rgba(134,239,172,.16);
-    }
+    .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.20)}
+    .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.18)}
 
     h1{
       margin:0;
@@ -173,8 +157,6 @@
       position:relative;
       z-index:1;
     }
-
-    h2,h3{margin:0}
 
     .tabs{
       display:grid;
@@ -195,10 +177,7 @@
       font-weight:800;
       width:100%;
       text-align:center;
-      transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
-
-    .tab-btn:hover{transform:translateY(-1px)}
 
     .tab-btn.active{
       border-color:rgba(96,165,250,.55);
@@ -229,13 +208,6 @@
     .featured-top{
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-
-    .featured-main-wrap{
-      display:flex;
       align-items:center;
       gap:12px;
       flex-wrap:wrap;
@@ -276,40 +248,6 @@
       background:linear-gradient(90deg, rgba(250,204,21,.92), rgba(34,197,94,.92));
     }
 
-    .team-logo{
-      width:34px;
-      height:34px;
-      object-fit:contain;
-      border-radius:10px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      padding:4px;
-      box-shadow:0 8px 20px rgba(0,0,0,.18);
-      flex:0 0 auto;
-    }
-
-    .team-logo-lg{
-      width:48px;
-      height:48px;
-      padding:6px;
-      border-radius:12px;
-    }
-
-    .teams-line-wrap{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin-bottom:8px;
-      flex-wrap:wrap;
-    }
-
-    .card-team-pair{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
     .panel{
       background:var(--panel);
       border-radius:20px;
@@ -317,14 +255,6 @@
       margin-bottom:14px;
       position:relative;
       overflow:hidden;
-    }
-
-    .panel::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 24%);
-      pointer-events:none;
     }
 
     .section-head{
@@ -352,12 +282,6 @@
       border-radius:20px;
       padding:14px;
       cursor:pointer;
-      transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-    }
-
-    body.theme-nhl .game-card,
-    body.theme-nhl .drop{
-      background:linear-gradient(180deg, rgba(13,31,52,.96), rgba(7,20,34,.98));
     }
 
     body.theme-mlb .game-card,
@@ -365,16 +289,9 @@
       background:linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
     }
 
-    .game-card:hover{transform:translateY(-2px)}
-
     .game-card.active{
       border-color:rgba(96,165,250,.6);
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset, 0 16px 40px rgba(0,0,0,.22);
-    }
-
-    body.theme-mlb .game-card.active{
-      border-color:rgba(34,197,94,.52);
-      box-shadow:0 0 0 1px rgba(34,197,94,.42) inset, 0 16px 40px rgba(0,0,0,.22);
     }
 
     .game-card.top-game{
@@ -407,7 +324,7 @@
     .teams-line{
       font-size:22px;
       font-weight:800;
-      margin:0;
+      margin-bottom:8px;
     }
 
     .score-row{
@@ -439,9 +356,6 @@
       font-size:12px;
       color:var(--muted);
     }
-
-    body.theme-nhl .chip{background:rgba(8,22,37,.72)}
-    body.theme-mlb .chip{background:rgba(8,24,15,.72)}
 
     .chip-strong{
       color:#bbf7d0;
@@ -562,19 +476,11 @@
       font-weight:800;
       width:100%;
       text-align:center;
-      transition:transform .15s ease, border-color .15s ease;
     }
-
-    .choice-btn:hover{transform:translateY(-1px)}
 
     .choice-btn.active{
       border-color:rgba(96,165,250,.55);
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
-    }
-
-    body.theme-mlb .choice-btn.active{
-      border-color:rgba(34,197,94,.55);
-      box-shadow:0 0 0 1px rgba(34,197,94,.45) inset;
     }
 
     .status-pill{
@@ -944,22 +850,6 @@
         return Number((insight || {}).confidence || 0) >= 24 ? 'chip chip-strong' : 'chip chip-tight';
       }
 
-      function teamLogoUrl(code){
-        const c = String(code || '').toUpperCase();
-        if(!c) return '';
-        if(state.sport === 'nhl'){
-          return 'https://assets.nhle.com/logos/nhl/svg/' + encodeURIComponent(c) + '_dark.svg';
-        }
-        return 'https://www.mlbstatic.com/team-logos/' + encodeURIComponent(c) + '.svg';
-      }
-
-      function logoImg(code, name, large){
-        const cls = large ? 'team-logo team-logo-lg' : 'team-logo';
-        const url = teamLogoUrl(code);
-        if(!url) return '';
-        return '<img class="' + cls + '" src="' + esc(url) + '" alt="' + esc(name || code) + ' logo" loading="lazy" referrerpolicy="no-referrer">';
-      }
-
       function renderFeaturedPick(){
         const host = byId('featuredPick');
         const insight = getTopInsight();
@@ -986,16 +876,13 @@
         host.innerHTML =
           '<div class="featured-pick">' +
             '<div class="featured-top">' +
-              '<div class="featured-main-wrap">' +
-                logoImg(insight.predictedWinner, insight.predictedWinner, true) +
-                '<div>' +
-                  '<div class="featured-title">Best ' + esc(state.sport.toUpperCase()) + ' pick today</div>' +
-                  '<div class="featured-main">' + esc(insight.predictedWinner) + ' over ' + esc(insight.predictedLoser) + '</div>' +
-                  '<div class="featured-sub">' +
-                    esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) +
-                    ' • Predicted score ' + esc(pred.away) + '-' + esc(pred.home) +
-                    ' • ' + esc(extra) +
-                  '</div>' +
+              '<div>' +
+                '<div class="featured-title">Best ' + esc(state.sport.toUpperCase()) + ' pick today</div>' +
+                '<div class="featured-main">' + esc(insight.predictedWinner) + ' over ' + esc(insight.predictedLoser) + '</div>' +
+                '<div class="featured-sub">' +
+                  esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) +
+                  ' • Predicted score ' + esc(pred.away) + '-' + esc(pred.home) +
+                  ' • ' + esc(extra) +
                 '</div>' +
               '</div>' +
               '<div>' +
@@ -1020,14 +907,8 @@
           '<div class="drop">' +
             '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
               '<div>' +
-                '<div class="card-team-pair">' +
-                  logoImg(insight.awayCode, insight.awayName, false) +
-                  '<span style="font-weight:900;">' + esc(insight.awayCode) + '</span>' +
-                  '<span class="muted">@</span>' +
-                  logoImg(insight.homeCode, insight.homeName, false) +
-                  '<span style="font-weight:900;">' + esc(insight.homeCode) + '</span>' +
-                '</div>' +
-                '<div class="muted" style="margin-top:8px;">' + esc(insight.awayName) + ' vs ' + esc(insight.homeName) + ' • ' + esc(insight.venue || '') + '</div>' +
+                '<h3>' + esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) + '</h3>' +
+                '<div class="muted" style="margin-top:6px;">' + esc(insight.awayName) + ' vs ' + esc(insight.homeName) + ' • ' + esc(insight.venue || '') + '</div>' +
               '</div>' +
               pickBadgeHtml(insight) +
             '</div>' +
@@ -1107,11 +988,7 @@
                 '<div class="game-rank">' + (idx === 0 ? 'Top play' : ('#' + (idx + 1) + ' edge')) + '</div>' +
                 '<div class="muted">Confidence ' + esc(conf.toFixed ? conf.toFixed(1) : conf) + '%</div>' +
               '</div>' +
-              '<div class="teams-line-wrap">' +
-                logoImg(g.awayCode, g.awayName, false) +
-                '<h3 class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</h3>' +
-                logoImg(g.homeCode, g.homeName, false) +
-              '</div>' +
+              '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
               '<div class="score-row">' +
                 '<div>' +
                   '<div><strong>' + esc(g.awayName) + '</strong></div>' +
@@ -1211,11 +1088,7 @@
             '<div class="choice-row">' +
               '<div class="choice-head">' +
                 '<div>' +
-                  '<div class="card-team-pair">' +
-                    logoImg(g.awayCode, g.awayName, false) +
-                    '<strong>' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</strong>' +
-                    logoImg(g.homeCode, g.homeName, false) +
-                  '</div>' +
+                  '<div><strong>' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</strong></div>' +
                   '<div class="muted">' + esc(fmtDateTime(g.startTimeUTC)) + ' • ' + esc(g.venue || '') + '</div>' +
                 '</div>' +
                 '<span class="status-pill ' + esc(status.cls) + '">' + esc(status.text) + '</span>' +
