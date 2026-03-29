@@ -3,227 +3,209 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NHL Matchup Predictor</title>
+  <title>Game Insights</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="NHL Predictor">
+  <meta name="apple-mobile-web-app-title" content="Game Insights">
   <style>
-    :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --panel-2: #1f2937;
-      --line: #334155;
-      --text: #e5e7eb;
-      --muted: #94a3b8;
-      --good: #22c55e;
-      --warn: #f59e0b;
-      --bad: #ef4444;
-      --chip: #0b1220;
+    :root{
+      --bg:#06111f;
+      --panel:rgba(7,17,31,.86);
+      --panel-2:rgba(12,28,48,.92);
+      --line:rgba(148,163,184,.18);
+      --text:#edf2f7;
+      --muted:#93a4ba;
+      --green:#22c55e;
+      --yellow:#facc15;
+      --red:#ef4444;
+      --blue:#60a5fa;
+      --ice1:#d7f0ff;
+      --ice2:#9fd7ff;
+      --field1:#1e4d2b;
+      --field2:#2f7d32;
+      --shadow:0 18px 50px rgba(0,0,0,.28);
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
-      color: var(--text);
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(96,165,250,.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(34,197,94,.10), transparent 25%),
+        linear-gradient(180deg,#03101d 0%,#081625 100%);
+      min-height:100vh;
     }
-    .wrap { max-width: 1400px; margin: 0 auto; padding: 18px; }
-    .hero, .panel, .stat, .prediction-card, .tile {
-      background: rgba(17, 24, 39, 0.94);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    body.theme-nhl{
+      background:
+        linear-gradient(180deg, rgba(205,237,255,.05), rgba(0,0,0,0) 20%),
+        radial-gradient(circle at 50% 0%, rgba(159,215,255,.18), transparent 40%),
+        linear-gradient(180deg,#02101c 0%, #082033 100%);
     }
-    .hero { padding: 18px; margin-bottom: 18px; }
-    h1 { margin: 0 0 8px; font-size: 30px; }
-    h2, h3 { margin: 0; }
-    .sub { color: var(--muted); line-height: 1.5; }
-    .toolbar {
-      display: grid;
-      grid-template-columns: 1.2fr .9fr auto;
-      gap: 12px;
-      margin-top: 16px;
+    body.theme-mlb{
+      background:
+        radial-gradient(circle at 50% 0%, rgba(96,165,250,.10), transparent 35%),
+        linear-gradient(180deg,#0b1f10 0%, #102818 100%);
     }
-    input, select, button {
-      width: 100%;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: var(--panel-2);
-      color: var(--text);
-      padding: 12px 14px;
-      font-size: 15px;
+    .wrap{max-width:1280px;margin:0 auto;padding:16px}
+    .hero,.panel,.game-card,.insight-card,.tab-btn,.day-btn,.reason-btn{
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
     }
-    button { cursor: pointer; font-weight: 700; }
-    button:hover { filter: brightness(1.08); }
-    .summary-grid,
-    .today-grid,
-    .prediction-grid,
-    .cards {
-      display: grid;
-      gap: 12px;
+    .hero{
+      border-radius:22px;
+      padding:18px;
+      background:
+        linear-gradient(180deg, rgba(8,20,34,.92), rgba(6,16,29,.92));
+      margin-bottom:16px;
+      position:sticky;
+      top:0;
+      z-index:5;
     }
-    .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 18px; }
-    .today-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
-    .prediction-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 18px; }
-    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .stat { padding: 14px; }
-    .stat .label { color: var(--muted); font-size: 13px; }
-    .stat .value { font-size: 26px; font-weight: 800; margin-top: 6px; }
-    .layout {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 18px;
-      align-items: start;
+    .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.15)}
+    .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.12)}
+    h1{margin:0;font-size:30px}
+    h2,h3,h4{margin:0}
+    .sub{margin-top:8px;color:var(--muted);line-height:1.45}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .tab-btn,.day-btn{
+      appearance:none;background:var(--panel-2);color:var(--text);padding:12px 16px;
+      border-radius:14px;cursor:pointer;font-weight:800
     }
-    .panel-head {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    .tab-btn.active,.day-btn.active{
+      border-color:rgba(96,165,250,.55);
+      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
+      background:linear-gradient(180deg, rgba(30,64,175,.45), rgba(15,23,42,.95));
     }
-    .panel-body { padding: 14px; }
-    .teams-list {
-      display: grid;
-      gap: 10px;
-      max-height: 75vh;
-      overflow: auto;
-      padding: 14px;
+    .meta-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+    .stat{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
     }
-    .team-btn {
-      width: 100%;
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-align: left;
+    .stat .label{color:var(--muted);font-size:12px}
+    .stat .value{font-size:23px;font-weight:800;margin-top:6px}
+    .panel{background:var(--panel);border-radius:20px;padding:16px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .muted{color:var(--muted)}
+    .day-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .game-card{
+      background:
+        linear-gradient(180deg, rgba(15,30,50,.95), rgba(8,19,35,.98));
+      border-radius:20px;
+      padding:14px;
+      cursor:pointer;
+      transition:transform .15s ease, border-color .15s ease;
     }
-    .team-btn.active { border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa inset; }
-    .logo { width: 34px; height: 34px; object-fit: contain; background: white; border-radius: 50%; padding: 3px; }
-    .card, .tile, .prediction-card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
+    body.theme-mlb .game-card{
+      background:
+        linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
     }
-    .card h3, .tile h3, .prediction-card h3 { margin-bottom: 10px; font-size: 18px; }
-    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-    .chip {
-      background: var(--chip);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 7px 10px;
-      color: var(--muted);
-      font-size: 12px;
+    .game-card:hover{transform:translateY(-2px)}
+    .game-card.active{border-color:rgba(96,165,250,.6);box-shadow:0 0 0 1px rgba(96,165,250,.55) inset}
+    .teams-line{font-size:22px;font-weight:800;margin-bottom:8px}
+    .score-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .score{
+      font-size:28px;font-weight:900;letter-spacing:.5px
     }
-    .prediction {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      background: linear-gradient(180deg, rgba(30,41,59,.95), rgba(15,23,42,.95));
-      margin-bottom: 14px;
+    .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .chip{
+      border:1px solid var(--line);
+      background:rgba(2,10,18,.62);
+      border-radius:999px;padding:7px 10px;font-size:12px;color:var(--muted)
     }
-    .winner { font-size: 24px; font-weight: 800; margin: 6px 0; }
-    .muted { color: var(--muted); }
-    .good { color: var(--good); }
-    .warn { color: var(--warn); }
-    .bad { color: var(--bad); }
-    .game-row {
-      border-top: 1px solid rgba(148,163,184,.18);
-      padding: 12px 0;
+    .insight-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+    .insight-card{
+      background:linear-gradient(180deg, rgba(11,25,43,.95), rgba(8,18,31,.97));
+      border-radius:20px;padding:16px
     }
-    .game-row:first-child { border-top: 0; padding-top: 0; }
-    .scoreline { font-size: 18px; font-weight: 700; }
-    .leaders { margin-top: 6px; color: var(--muted); font-size: 14px; }
-    .small-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+    body.theme-mlb .insight-card{
+      background:linear-gradient(180deg, rgba(16,44,24,.95), rgba(9,25,15,.97));
     }
-    .tiny { font-size: 12px; color: var(--muted); }
-    .empty {
-      text-align: center;
-      padding: 40px 14px;
-      color: var(--muted);
-      border: 1px dashed var(--line);
-      border-radius: 16px;
+    .pick-badge{
+      display:inline-flex;align-items:center;gap:8px;
+      border-radius:999px;padding:10px 14px;font-weight:900;font-size:16px
     }
-    .error-box {
-      margin-top: 12px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(239,68,68,.45);
-      background: rgba(127, 29, 29, .22);
-      color: #fecaca;
-      display: none;
+    .pick-green{background:rgba(34,197,94,.18);color:#bbf7d0;border:1px solid rgba(34,197,94,.38)}
+    .pick-yellow{background:rgba(250,204,21,.18);color:#fde68a;border:1px solid rgba(250,204,21,.35)}
+    .pick-red{background:rgba(239,68,68,.18);color:#fecaca;border:1px solid rgba(239,68,68,.35)}
+    .pick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+    .mini{
+      border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(2,10,18,.38)
     }
-    @media (max-width: 980px) {
-      .layout, .cards, .summary-grid, .toolbar, .today-grid, .prediction-grid { grid-template-columns: 1fr; }
-      .teams-list { max-height: none; }
+    .mini .label{color:var(--muted);font-size:12px}
+    .mini .value{font-size:20px;font-weight:800;margin-top:6px}
+    .reason-list{display:grid;gap:10px}
+    .reason-item{
+      border:1px solid var(--line);border-radius:16px;background:rgba(2,10,18,.34);overflow:hidden
+    }
+    .reason-btn{
+      width:100%;text-align:left;background:transparent;color:var(--text);
+      border:0;padding:13px 14px;cursor:pointer;font-weight:800
+    }
+    .reason-body{display:none;padding:0 14px 14px;color:var(--muted);line-height:1.45}
+    .reason-item.open .reason-body{display:block}
+    .error{
+      display:none;margin-top:12px;padding:12px 14px;border-radius:14px;
+      border:1px solid rgba(239,68,68,.38);background:rgba(127,29,29,.25);color:#fecaca
+    }
+    .empty{
+      padding:40px 14px;text-align:center;color:var(--muted);
+      border:1px dashed var(--line);border-radius:18px
+    }
+    @media (max-width: 980px){
+      .meta-row,.grid,.insight-layout,.pick-grid{grid-template-columns:1fr}
+      h1{font-size:26px}
     }
   </style>
 </head>
-<body>
+<body class="theme-nhl">
   <div class="wrap">
-    <div class="hero">
-      <h1>🏒 NHL Matchup Predictor</h1>
-      <div class="sub">
-        All NHL teams, cross-referenced opponents, past scores, top point leaders, upcoming games, and a rough next-game winner pick using standings, recent form, home or road split, head-to-head, and rest.
+    <div class="hero top-accent-nhl" id="hero">
+      <h1 id="titleText">🏒 NHL Game Insights</h1>
+      <div class="sub" id="subtitleText">
+        Day 1 and Day 2 game boards, live scores, and matchup insights. Scores refresh every 5 minutes, predictions every 15 minutes, and the 2-day board every 8 hours.
       </div>
-      <div class="toolbar">
-        <input id="searchBox" type="text" placeholder="Search team name or code">
-        <select id="opponentFilter">
-          <option value="">All opponents</option>
-        </select>
-        <button id="refreshBtn" type="button">Refresh</button>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-sport="nhl">NHL</button>
+        <button class="tab-btn" data-sport="mlb">MLB</button>
+        <button class="tab-btn" data-sport="insights">Game Insights</button>
       </div>
-      <div id="topError" class="error-box"></div>
+
+      <div class="meta-row">
+        <div class="stat"><div class="label">Current sport</div><div class="value" id="metaSport">NHL</div></div>
+        <div class="stat"><div class="label">Games shown</div><div class="value" id="metaGames">-</div></div>
+        <div class="stat"><div class="label">Scores refresh</div><div class="value" id="metaScores">5m</div></div>
+        <div class="stat"><div class="label">Predictions refresh</div><div class="value" id="metaPreds">15m</div></div>
+      </div>
+
+      <div class="error" id="topError"></div>
     </div>
 
-    <div class="summary-grid">
-      <div class="stat"><div class="label">Teams</div><div class="value" id="teamsCount">-</div></div>
-      <div class="stat"><div class="label">Season</div><div class="value" id="seasonCode">-</div></div>
-      <div class="stat"><div class="label">Selected Team</div><div class="value" id="selectedCode">-</div></div>
-      <div class="stat"><div class="label">Next Game Pick</div><div class="value" id="selectedPick">-</div></div>
-    </div>
-
-    <div class="today-grid">
-      <div class="panel">
-        <div class="panel-head">
-          <strong>Today’s NHL games</strong>
-          <span class="muted" id="todayHint">Loading...</span>
-        </div>
-        <div class="panel-body" id="todayArea">
-          <div class="empty">Loading...</div>
-        </div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="section-head">
+        <strong>Next 2 days</strong>
+        <span class="muted" id="boardHint">Loading...</span>
       </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <strong>League next-game picks</strong>
-          <span class="muted" id="predictionHint">Loading...</span>
-        </div>
-        <div class="panel-body" id="leaguePredictionArea">
-          <div class="empty">Loading...</div>
-        </div>
+      <div class="day-tabs">
+        <button class="day-btn active" data-day="0">Day 1</button>
+        <button class="day-btn" data-day="1">Day 2</button>
+      </div>
+      <div id="boardArea" class="grid">
+        <div class="empty">Loading board...</div>
       </div>
     </div>
 
-    <div class="layout">
-      <div class="panel">
-        <div class="panel-head">
-          <strong>Teams</strong>
-          <span class="muted" id="teamListHint">Loading...</span>
-        </div>
-        <div class="teams-list" id="teamsList"></div>
+    <div class="panel">
+      <div class="section-head">
+        <strong id="detailTitle">Selected game insight</strong>
+        <span class="muted" id="detailHint">Pick a game card</span>
       </div>
-
       <div id="detailArea">
-        <div class="empty">Pick a team to load the full cross-reference view.</div>
+        <div class="empty">Tap a game card to see the live score and insight panel.</div>
       </div>
     </div>
   </div>
@@ -231,359 +213,300 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const state = {
-        teams: [],
-        selectedTeam: '',
-        opponent: ''
+        view: 'nhl',
+        boardSport: 'nhl',
+        dayIndex: 0,
+        boards: { nhl: null, mlb: null },
+        insights: { nhl: null, mlb: null },
+        selectedGameIdBySport: { nhl: null, mlb: null }
       };
 
-      function byId(id) {
-        return document.getElementById(id);
+      function byId(id){ return document.getElementById(id); }
+      function esc(v){
+        return String(v == null ? '' : v)
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       }
-
-      function esc(value) {
-        return String(value == null ? '' : value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
+      function fmtDateTime(v){
+        if(!v) return '-';
+        const d = new Date(v);
+        return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
       }
-
-      function fmtDate(value) {
-        if (!value) return '-';
-        const d = new Date(value.includes('T') ? value : value + 'T12:00:00Z');
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      function shortDate(v){
+        if(!v) return '-';
+        const d = new Date(v + 'T12:00:00Z');
+        return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
       }
-
-      function fmtDateTime(value) {
-        if (!value) return '-';
-        const d = new Date(value);
-        return d.toLocaleString(undefined, {
-          month: 'short',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit'
-        });
-      }
-
-      function setTopError(message) {
+      function showError(msg){
         const box = byId('topError');
-        if (!message) {
-          box.style.display = 'none';
-          box.textContent = '';
-          return;
-        }
-        box.style.display = 'block';
-        box.textContent = message;
+        if(!msg){ box.style.display='none'; box.textContent=''; return; }
+        box.style.display='block'; box.textContent=msg;
       }
-
-      async function getJSON(url) {
-        const res = await fetch(url, { cache: 'no-store' });
+      async function getJSON(url){
+        const res = await fetch(url,{cache:'no-store'});
         let data = null;
-        try {
-          data = await res.json();
-        } catch (e) {
-          data = null;
-        }
-        if (!res.ok) {
-          const msg = data && data.error ? data.error : ('Request failed: ' + res.status);
-          throw new Error(msg);
+        try { data = await res.json(); } catch(e) {}
+        if(!res.ok){
+          throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status));
         }
         return data;
       }
-
-      function renderOpponentOptions(options) {
-        const sel = byId('opponentFilter');
-        let html = '<option value="">All opponents</option>';
-        for (let i = 0; i < options.length; i += 1) {
-          const code = options[i];
-          html += '<option value="' + esc(code) + '">' + esc(code) + '</option>';
-        }
-        sel.innerHTML = html;
-        sel.value = state.opponent || '';
+      function activeSport(){
+        return state.view === 'insights' ? state.boardSport : state.view;
       }
-
-      function renderTeams() {
-        const query = byId('searchBox').value.trim().toLowerCase();
-        const host = byId('teamsList');
-
-        const filtered = state.teams.filter(function (team) {
-          return !query ||
-            team.name.toLowerCase().indexOf(query) !== -1 ||
-            team.code.toLowerCase().indexOf(query) !== -1;
+      function setTheme(){
+        const sport = activeSport();
+        document.body.className = sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
+        byId('hero').className = 'hero ' + (sport === 'mlb' ? 'top-accent-mlb' : 'top-accent-nhl');
+        byId('metaSport').textContent = sport.toUpperCase();
+        byId('titleText').textContent = sport === 'mlb' ? '⚾ MLB Game Insights' : '🏒 NHL Game Insights';
+        byId('subtitleText').textContent = 'Day 1 and Day 2 game boards, live scores, and matchup insights. Scores refresh every 5 minutes, predictions every 15 minutes, and the 2-day board every 8 hours.';
+      }
+      function refreshTabButtons(){
+        document.querySelectorAll('.tab-btn').forEach(function(btn){
+          btn.classList.toggle('active', btn.getAttribute('data-sport') === state.view);
         });
-
-        let html = '';
-        for (let i = 0; i < filtered.length; i += 1) {
-          const team = filtered[i];
-          const active = team.code === state.selectedTeam ? ' active' : '';
-          const logo = team.logo || team.darkLogo || '';
-          html += '' +
-            '<button class="team-btn' + active + '" data-team="' + esc(team.code) + '">' +
-              (logo ? '<img class="logo" src="' + esc(logo) + '" alt="' + esc(team.code) + '">' : '') +
-              '<div>' +
-                '<div><strong>' + esc(team.name) + '</strong></div>' +
-                '<div class="muted tiny">' + esc(team.code) + '</div>' +
-              '</div>' +
-            '</button>';
-        }
-
-        host.innerHTML = html || '<div class="empty">No teams found.</div>';
-        byId('teamListHint').textContent = filtered.length + ' shown';
-
-        const buttons = host.querySelectorAll('[data-team]');
-        for (let i = 0; i < buttons.length; i += 1) {
-          buttons[i].addEventListener('click', function () {
-            state.selectedTeam = this.getAttribute('data-team') || '';
-            state.opponent = '';
-            byId('opponentFilter').value = '';
-            renderTeams();
-            loadTeamDetail();
-          });
-        }
+        document.querySelectorAll('.day-btn').forEach(function(btn){
+          btn.classList.toggle('active', Number(btn.getAttribute('data-day')) === state.dayIndex);
+        });
       }
-
-      function renderPredictionBlock(detail) {
-        const p = detail.prediction;
-        if (!p) {
-          return '<div class="prediction"><div class="muted">No upcoming game found for this filter.</div></div>';
+      function scoreStatusText(game){
+        if(game.sport === 'mlb' && game.inningState){
+          return game.status + ' • ' + game.inningState + ' ' + (game.currentInning || '');
         }
-
-        const winnerName = p.predictedWinner === detail.code ? detail.team : p.game.opponentName;
-        return '' +
-          '<div class="prediction">' +
-            '<div class="muted">Next predicted game</div>' +
-            '<div class="winner">' + esc(winnerName) + '</div>' +
-            '<div>' + esc(detail.code) + ' vs ' + esc(p.opponent) + ' • ' + fmtDateTime(p.game.startTimeUTC) + '</div>' +
-            '<div class="chips">' +
-              '<div class="chip">' + esc(detail.code) + ' win chance: ' + esc(p.teamWinProbability) + '%</div>' +
-              '<div class="chip">Confidence: ' + esc(p.confidence) + '%</div>' +
-              '<div class="chip">' + (p.game.isHome ? 'Home ice' : 'Road game') + '</div>' +
-            '</div>' +
-            '<div class="leaders" style="margin-top:10px;">Why: ' + p.reasonSummary.map(esc).join(' • ') + '</div>' +
-          '</div>';
+        if(game.status === 'OFF'){
+          return 'Final';
+        }
+        return game.status + ' • ' + fmtDateTime(game.startTimeUTC);
       }
-
-      function renderRecentGames(games) {
-        if (!games || !games.length) {
-          return '<div class="empty">No completed games found for this view.</div>';
+      function renderBoard(){
+        const sport = activeSport();
+        const board = state.boards[sport];
+        const host = byId('boardArea');
+        if(!board || !board.days || !board.days.length){
+          host.innerHTML = '<div class="empty">No games loaded.</div>';
+          byId('boardHint').textContent = 'No board';
+          byId('metaGames').textContent = '-';
+          return;
         }
+        const day = board.days[state.dayIndex] || board.days[0];
+        const games = (day && day.games) || [];
+        byId('boardHint').textContent = (day.label || ('Day ' + (state.dayIndex + 1))) + ' • ' + shortDate(day.date);
+        byId('metaGames').textContent = String(games.length);
+        byId('metaScores').textContent = Math.round((board.refreshWindows?.scoresSeconds || 300) / 60) + 'm';
+        byId('metaPreds').textContent = Math.round((board.refreshWindows?.predictionsSeconds || 900) / 60) + 'm';
 
-        let html = '';
-        for (let i = 0; i < games.length; i += 1) {
-          const g = games[i];
-          const leaders = (g.pointsLeaders || []).map(function (p) {
-            return p.name + ' (' + p.points + 'P)';
-          }).join(', ');
-
-          html += '' +
-            '<div class="game-row">' +
-              '<div class="scoreline">' + esc(g.teamCode) + ' ' + esc(g.teamScore) + ' - ' + esc(g.opponentScore) + ' ' + esc(g.opponentCode) +
-                ' <span class="' + (g.won ? 'good' : 'bad') + '">(' + (g.goalDiff > 0 ? '+' : '') + esc(g.goalDiff) + ')</span></div>' +
-              '<div class="muted">' + fmtDate(g.gameDate) + ' • ' + (g.isHome ? 'Home' : 'Away') + ' • ' + esc(g.venue || '') + '</div>' +
-              '<div class="leaders">Point leaders: ' + esc(leaders || 'No points recorded in this boxscore view.') + '</div>' +
-            '</div>';
-        }
-        return html;
-      }
-
-      function renderUpcomingGames(games) {
-        if (!games || !games.length) {
-          return '<div class="empty">No upcoming games found for this view.</div>';
-        }
-
-        let html = '';
-        for (let i = 0; i < games.length; i += 1) {
-          const g = games[i];
-          html += '' +
-            '<div class="game-row">' +
-              '<div class="scoreline">' + esc(g.teamCode) + ' vs ' + esc(g.opponentCode) + '</div>' +
-              '<div class="muted">' + fmtDateTime(g.startTimeUTC) + ' • ' + (g.isHome ? 'Home' : 'Away') + ' • ' + esc(g.venue || '') + '</div>' +
-            '</div>';
-        }
-        return html;
-      }
-
-      function renderDetail(detail) {
-        byId('selectedCode').textContent = detail.code || '-';
-        byId('selectedPick').textContent = detail.prediction ? detail.prediction.predictedWinner : '-';
-        renderOpponentOptions(detail.crossReferenceOptions || []);
-
-        byId('detailArea').innerHTML = '' +
-          renderPredictionBlock(detail) +
-          '<div class="cards">' +
-            '<div class="card">' +
-              '<h3>' + esc(detail.team) + ' standing snapshot</h3>' +
-              '<div class="small-grid">' +
-                '<div><div class="tiny">Points</div><div><strong>' + esc(detail.standing.points || '-') + '</strong></div></div>' +
-                '<div><div class="tiny">Record</div><div><strong>' + esc(detail.standing.wins || 0) + '-' + esc(detail.standing.losses || 0) + '-' + esc(detail.standing.otLosses || 0) + '</strong></div></div>' +
-                '<div><div class="tiny">League rank</div><div><strong>' + esc(detail.standing.leagueSequence || '-') + '</strong></div></div>' +
-                '<div><div class="tiny">Points %</div><div><strong>' + esc(detail.standing.pointPctg || '-') + '</strong></div></div>' +
-                '<div><div class="tiny">Goals / game</div><div><strong>' + esc(detail.standing.goalForPerGame || '-') + '</strong></div></div>' +
-                '<div><div class="tiny">Goals against / game</div><div><strong>' + esc(detail.standing.goalAgainstPerGame || '-') + '</strong></div></div>' +
-              '</div>' +
-              '<div class="chips">' +
-                '<div class="chip">Completed: ' + esc(detail.totals.completed) + '</div>' +
-                '<div class="chip">Upcoming: ' + esc(detail.totals.upcoming) + '</div>' +
-                '<div class="chip">Season games loaded: ' + esc(detail.totals.gamesPlayed) + '</div>' +
-              '</div>' +
-            '</div>' +
-
-            '<div class="card">' +
-              '<h3>Upcoming games</h3>' +
-              renderUpcomingGames(detail.upcomingGames || []) +
-            '</div>' +
-
-            '<div class="card">' +
-              '<h3>Recent completed games</h3>' +
-              renderRecentGames(detail.recentGames || []) +
-            '</div>' +
-
-            '<div class="card">' +
-              '<h3>How this app makes the rough pick</h3>' +
-              '<div class="muted">It combines standings points percentage, season goal differential, recent 5-game form, home or road split, last few head-to-head results, and rest days. It is a rough model, not a betting-grade forecast.</div>' +
-            '</div>' +
-          '</div>';
-      }
-
-      function renderTodayGames(data) {
-        const host = byId('todayArea');
-        const games = data.games || [];
-        byId('todayHint').textContent = games.length ? (games.length + ' games') : 'No games';
-
-        if (!games.length) {
-          host.innerHTML = '<div class="empty">No NHL games found for today.</div>';
+        if(!games.length){
+          host.innerHTML = '<div class="empty">No games on this day.</div>';
           return;
         }
 
-        let html = '';
-        for (let i = 0; i < games.length; i += 1) {
-          const g = games[i];
-          const liveOrPregame = g.gameState === 'OFF'
-            ? ('Final • ' + g.awayScore + '-' + g.homeScore)
-            : (g.gameState + ' • ' + fmtDateTime(g.startTimeUTC));
-
-          html += '' +
-            '<div class="tile">' +
-              '<h3>' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</h3>' +
-              '<div class="muted">' + esc(g.awayName) + ' vs ' + esc(g.homeName) + '</div>' +
-              '<div class="chips">' +
-                '<div class="chip">' + esc(liveOrPregame) + '</div>' +
+        const selectedId = state.selectedGameIdBySport[sport];
+        host.innerHTML = games.map(function(g){
+          const active = String(g.id) === String(selectedId) ? ' active' : '';
+          const score = (g.awayScore != null && g.homeScore != null)
+            ? (esc(g.awayScore) + ' - ' + esc(g.homeScore))
+            : '-';
+          return '' +
+            '<div class="game-card' + active + '" data-game-id="' + esc(g.id) + '">' +
+              '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
+              '<div class="score-row">' +
+                '<div>' +
+                  '<div><strong>' + esc(g.awayName) + '</strong></div>' +
+                  '<div><strong>' + esc(g.homeName) + '</strong></div>' +
+                '</div>' +
+                '<div class="score">' + score + '</div>' +
+              '</div>' +
+              '<div class="chip-row">' +
+                '<div class="chip">' + esc(scoreStatusText(g)) + '</div>' +
                 '<div class="chip">' + esc(g.venue || '') + '</div>' +
+                (sport === 'mlb'
+                  ? '<div class="chip">' + esc((g.awayProbablePitcher || 'TBD') + ' vs ' + (g.homeProbablePitcher || 'TBD')) + '</div>'
+                  : '') +
               '</div>' +
             '</div>';
-        }
-        host.innerHTML = html;
+        }).join('');
+
+        host.querySelectorAll('[data-game-id]').forEach(function(el){
+          el.addEventListener('click', function(){
+            state.selectedGameIdBySport[sport] = this.getAttribute('data-game-id');
+            renderBoard();
+            renderDetail();
+          });
+        });
       }
+      function selectedInsight(){
+        const sport = activeSport();
+        const payload = state.insights[sport];
+        if(!payload || !payload.insights) return null;
+        const selectedId = state.selectedGameIdBySport[sport];
+        if(selectedId == null){
+          return payload.insights[0] || null;
+        }
+        return payload.insights.find(function(x){ return String(x.gameId) === String(selectedId); }) || payload.insights[0] || null;
+      }
+      function pickBadgeHtml(insight){
+        if(insight.error){
+          return '<span class="pick-badge pick-red">Unavailable</span>';
+        }
+        if(insight.tier === 'tight'){
+          return '<span class="pick-badge pick-yellow">Tight game • ' + esc(insight.predictedWinner) + ' slight edge</span>';
+        }
+        return '<span class="pick-badge pick-green">Pick • ' + esc(insight.predictedWinner) + '</span>';
+      }
+      function reasonItem(reason){
+        return '' +
+          '<div class="reason-item">' +
+            '<button type="button" class="reason-btn">' + esc(reason.label) + '</button>' +
+            '<div class="reason-body">' + esc(reason.text) + '</div>' +
+          '</div>';
+      }
+      function renderDetail(){
+        const sport = activeSport();
+        const insight = selectedInsight();
+        const host = byId('detailArea');
+        if(!insight){
+          host.innerHTML = '<div class="empty">Tap a game card to see the live score and insight panel.</div>';
+          byId('detailHint').textContent = 'Pick a game card';
+          return;
+        }
+        state.selectedGameIdBySport[sport] = insight.gameId;
+        byId('detailHint').textContent = shortDate(insight.date) + ' • ' + fmtDateTime(insight.startTimeUTC);
 
-      function renderLeaguePredictions(data) {
-        const host = byId('leaguePredictionArea');
-        const items = data.predictions || [];
-        byId('predictionHint').textContent = items.length ? (items.length + ' loaded') : 'No picks';
-
-        if (!items.length) {
-          host.innerHTML = '<div class="empty">No league predictions available right now.</div>';
+        if(insight.error){
+          host.innerHTML = '<div class="empty">Could not build this insight right now.</div>';
           return;
         }
 
-        let html = '';
-        const show = items.slice(0, 8);
-        for (let i = 0; i < show.length; i += 1) {
-          const p = show[i];
-          const nextGame = p.nextGame || {};
-          const winner = p.predictedWinner;
-          html += '' +
-            '<div class="prediction-card">' +
-              '<h3>' + esc(p.code) + ' vs ' + esc(nextGame.opponentCode || '-') + '</h3>' +
-              '<div class="muted">' + fmtDateTime(nextGame.startTimeUTC) + '</div>' +
-              '<div class="winner" style="font-size:20px;">Pick: ' + esc(winner) + '</div>' +
-              '<div class="chips">' +
-                '<div class="chip">Win chance: ' + esc(p.teamWinProbability) + '%</div>' +
-                '<div class="chip">Confidence: ' + esc(p.confidence) + '%</div>' +
+        const loserClass = insight.tier === 'tight' ? 'pick-yellow' : 'pick-red';
+        host.innerHTML = '' +
+          '<div class="insight-layout">' +
+            '<div class="insight-card">' +
+              '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
+                '<div>' +
+                  '<h2>' + esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) + '</h2>' +
+                  '<div class="muted" style="margin-top:6px;">' + esc(insight.awayName) + ' vs ' + esc(insight.homeName) + ' • ' + esc(insight.venue || '') + '</div>' +
+                '</div>' +
+                pickBadgeHtml(insight) +
               '</div>' +
-            '</div>';
-        }
-        host.innerHTML = html;
+
+              '<div class="pick-grid">' +
+                '<div class="mini"><div class="label">Predicted winner</div><div class="value good">' + esc(insight.predictedWinner) + '</div></div>' +
+                '<div class="mini"><div class="label">Predicted loser</div><div class="value ' + loserClass.replace('pick-','') + '">' + esc(insight.predictedLoser) + '</div></div>' +
+                '<div class="mini"><div class="label">Live score</div><div class="value">' + esc(insight.live.awayScore) + ' - ' + esc(insight.live.homeScore) + '</div></div>' +
+                '<div class="mini"><div class="label">Game state</div><div class="value" style="font-size:18px;">' + esc(insight.live.status || '-') + '</div></div>' +
+                '<div class="mini"><div class="label">Confidence</div><div class="value">' + esc(insight.confidence) + '%</div></div>' +
+                '<div class="mini"><div class="label">Projected total ' + (sport === 'nhl' ? 'goals' : 'runs') + '</div><div class="value">' + esc(insight.projectedTotal) + '</div></div>' +
+              '</div>' +
+
+              '<div class="chip-row">' +
+                (sport === 'nhl'
+                  ? '<div class="chip">Likely point team: ' + esc(insight.likelyPointTeam) + '</div>'
+                  : '<div class="chip">Probable pitchers: ' + esc((insight.probablePitchers.away || 'TBD') + ' vs ' + (insight.probablePitchers.home || 'TBD')) + '</div>') +
+                '<div class="chip">Prediction refreshed: ' + esc(fmtDateTime(insight.lastPredictionRefreshUTC)) + '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="insight-card">' +
+              '<h3 style="margin-bottom:12px;">Why this edge</h3>' +
+              '<div class="reason-list">' +
+                (insight.reasons || []).map(reasonItem).join('') +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        host.querySelectorAll('.reason-item').forEach(function(item){
+          const btn = item.querySelector('.reason-btn');
+          btn.addEventListener('click', function(){
+            item.classList.toggle('open');
+          });
+        });
       }
-
-      async function loadTodayGames() {
-        try {
-          const data = await getJSON('/api/today');
-          renderTodayGames(data);
-        } catch (err) {
-          byId('todayHint').textContent = 'Error';
-          byId('todayArea').innerHTML = '<div class="empty">Could not load today’s games.</div>';
+      async function ensureData(sport){
+        if(!state.boards[sport]){
+          state.boards[sport] = await getJSON('/api/board/' + sport);
+        }
+        if(!state.insights[sport]){
+          state.insights[sport] = await getJSON('/api/insights/' + sport);
+        }
+        if(state.selectedGameIdBySport[sport] == null){
+          const first = (((state.boards[sport] || {}).days || [])[0] || {}).games || [];
+          if(first[0]) state.selectedGameIdBySport[sport] = first[0].id;
         }
       }
-
-      async function loadLeaguePredictions() {
-        try {
-          const data = await getJSON('/api/predictions');
-          renderLeaguePredictions(data);
-        } catch (err) {
-          byId('predictionHint').textContent = 'Error';
-          byId('leaguePredictionArea').innerHTML = '<div class="empty">Could not load league predictions.</div>';
-        }
-      }
-
-      async function loadTeams() {
-        try {
-          const data = await getJSON('/api/teams');
-          state.teams = data.teams || [];
-          byId('teamsCount').textContent = state.teams.length;
-          byId('seasonCode').textContent = data.season || '-';
-          renderTeams();
-
-          if (!state.selectedTeam && state.teams.length) {
-            state.selectedTeam = state.teams[0].code;
-            renderTeams();
-            await loadTeamDetail();
+      async function refreshScoresAndPredictions(){
+        const sports = ['nhl','mlb'];
+        for(const sport of sports){
+          if(state.boards[sport]){
+            try { state.boards[sport] = await getJSON('/api/board/' + sport); } catch(e){}
           }
-        } catch (err) {
-          byId('teamsCount').textContent = '0';
-          byId('seasonCode').textContent = '-';
-          byId('teamListHint').textContent = 'Error';
-          byId('teamsList').innerHTML = '<div class="empty">Could not load teams.</div>';
-          setTopError('Could not load NHL team data: ' + err.message);
+          if(state.insights[sport]){
+            try { state.insights[sport] = await getJSON('/api/insights/' + sport); } catch(e){}
+          }
+        }
+        renderBoard();
+        renderDetail();
+      }
+      async function fullReload(){
+        try{
+          showError('');
+          await ensureData(activeSport());
+          setTheme();
+          refreshTabButtons();
+          renderBoard();
+          renderDetail();
+        }catch(err){
+          showError('Could not load data: ' + err.message);
+          byId('boardArea').innerHTML = '<div class="empty">Could not load board.</div>';
+          byId('detailArea').innerHTML = '<div class="empty">Could not load insight panel.</div>';
         }
       }
 
-      async function loadTeamDetail() {
-        if (!state.selectedTeam) return;
-
-        byId('detailArea').innerHTML = '<div class="empty">Loading ' + esc(state.selectedTeam) + '...</div>';
-        const qs = state.opponent ? ('?opponent=' + encodeURIComponent(state.opponent)) : '';
-
-        try {
-          const detail = await getJSON('/api/team/' + encodeURIComponent(state.selectedTeam) + qs);
-          renderDetail(detail);
-        } catch (err) {
-          byId('selectedCode').textContent = state.selectedTeam;
-          byId('selectedPick').textContent = '-';
-          byId('detailArea').innerHTML = '<div class="empty">Could not load team data.</div>';
-          setTopError('Could not load team view: ' + err.message);
-        }
-      }
-
-      byId('searchBox').addEventListener('input', function () {
-        renderTeams();
+      document.querySelectorAll('.tab-btn').forEach(function(btn){
+        btn.addEventListener('click', async function(){
+          state.view = this.getAttribute('data-sport');
+          if(state.view === 'nhl' || state.view === 'mlb'){
+            state.boardSport = state.view;
+          }
+          await fullReload();
+        });
+      });
+      document.querySelectorAll('.day-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          state.dayIndex = Number(this.getAttribute('data-day')) || 0;
+          refreshTabButtons();
+          renderBoard();
+          renderDetail();
+        });
       });
 
-      byId('opponentFilter').addEventListener('change', function (e) {
-        state.opponent = e.target.value || '';
-        loadTeamDetail();
-      });
-
-      byId('refreshBtn').addEventListener('click', function () {
-        setTopError('');
-        loadTodayGames();
-        loadLeaguePredictions();
-        loadTeams();
-      });
-
-      loadTodayGames();
-      loadLeaguePredictions();
-      loadTeams();
+      fullReload();
+      setInterval(async function(){
+        const sport = activeSport();
+        try{
+          if(state.boards[sport]){
+            state.boards[sport] = await getJSON('/api/board/' + sport);
+            renderBoard();
+            renderDetail();
+          }
+        }catch(e){}
+      }, 300000);
+      setInterval(async function(){
+        const sport = activeSport();
+        try{
+          state.insights[sport] = await getJSON('/api/insights/' + sport);
+          renderDetail();
+        }catch(e){}
+      }, 900000);
+      setInterval(async function(){
+        const sport = activeSport();
+        try{
+          state.boards[sport] = await getJSON('/api/board/' + sport);
+          state.insights[sport] = await getJSON('/api/insights/' + sport);
+          renderBoard();
+          renderDetail();
+        }catch(e){}
+      }, 28800000);
     });
   </script>
 </body>
