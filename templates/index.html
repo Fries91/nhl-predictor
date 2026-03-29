@@ -17,36 +17,100 @@
       --yellow:#facc15;
       --red:#ef4444;
       --blue:#60a5fa;
-      --shadow:0 18px 50px rgba(0,0,0,.28);
+      --ice:#bfe6ff;
+      --grass:#86efac;
+      --shadow:0 18px 50px rgba(0,0,0,.30);
     }
+
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial,Helvetica,sans-serif;
       color:var(--text);
+      min-height:100vh;
       background:
         radial-gradient(circle at top left, rgba(96,165,250,.14), transparent 30%),
         radial-gradient(circle at top right, rgba(34,197,94,.10), transparent 25%),
         linear-gradient(180deg,#03101d 0%,#081625 100%);
-      min-height:100vh;
+      background-attachment:fixed;
+      position:relative;
+      overflow-x:hidden;
     }
+
+    body::before,
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+    }
+
     body.theme-nhl{
       background:
-        linear-gradient(180deg, rgba(205,237,255,.05), rgba(0,0,0,0) 20%),
-        radial-gradient(circle at 50% 0%, rgba(159,215,255,.18), transparent 40%),
-        linear-gradient(180deg,#02101c 0%, #082033 100%);
+        radial-gradient(circle at 50% -10%, rgba(191,230,255,.22), transparent 38%),
+        radial-gradient(circle at 15% 10%, rgba(125,211,252,.14), transparent 28%),
+        radial-gradient(circle at 85% 8%, rgba(96,165,250,.12), transparent 24%),
+        linear-gradient(180deg,#02101b 0%, #072036 45%, #091a2b 100%);
+      background-attachment:fixed;
     }
+
+    body.theme-nhl::before{
+      background:
+        linear-gradient(90deg, transparent 8%, rgba(255,255,255,.05) 8.3%, transparent 8.6%, transparent 49.6%, rgba(239,68,68,.18) 50%, transparent 50.4%, transparent 91.4%, rgba(255,255,255,.05) 91.7%, transparent 92%),
+        linear-gradient(180deg, transparent 14%, rgba(255,255,255,.04) 14.2%, transparent 14.4%, transparent 85.6%, rgba(255,255,255,.04) 85.8%, transparent 86%);
+      opacity:.75;
+    }
+
+    body.theme-nhl::after{
+      background:
+        radial-gradient(circle at 50% 46%, rgba(255,255,255,.08), transparent 12%),
+        radial-gradient(circle at 50% 46%, rgba(191,230,255,.07), transparent 26%),
+        linear-gradient(180deg, rgba(255,255,255,.04), transparent 18%);
+      mix-blend-mode:screen;
+      opacity:.7;
+    }
+
     body.theme-mlb{
       background:
-        radial-gradient(circle at 50% 0%, rgba(96,165,250,.10), transparent 35%),
-        linear-gradient(180deg,#0b1f10 0%, #102818 100%);
+        radial-gradient(circle at 50% -10%, rgba(134,239,172,.16), transparent 38%),
+        radial-gradient(circle at 12% 8%, rgba(34,197,94,.10), transparent 28%),
+        radial-gradient(circle at 88% 10%, rgba(96,165,250,.08), transparent 26%),
+        linear-gradient(180deg,#08140b 0%, #0d2915 42%, #122014 100%);
+      background-attachment:fixed;
     }
-    .wrap{max-width:1320px;margin:0 auto;padding:16px}
+
+    body.theme-mlb::before{
+      background:
+        radial-gradient(circle at 50% 100%, rgba(120,113,108,.16), transparent 34%),
+        linear-gradient(180deg, transparent 62%, rgba(120,113,108,.11) 72%, rgba(120,113,108,.14) 100%);
+      opacity:.8;
+    }
+
+    body.theme-mlb::after{
+      background:
+        radial-gradient(circle at 50% 78%, rgba(255,255,255,.10), transparent 1.4%),
+        conic-gradient(from 225deg at 50% 78%, transparent 0deg 43deg, rgba(255,255,255,.12) 43deg 47deg, transparent 47deg 313deg, rgba(255,255,255,.12) 313deg 317deg, transparent 317deg 360deg),
+        radial-gradient(circle at 50% 78%, rgba(34,197,94,.08), transparent 22%);
+      opacity:.5;
+    }
+
+    .wrap{
+      max-width:1320px;
+      margin:0 auto;
+      padding:16px;
+      position:relative;
+      z-index:1;
+    }
+
     .hero,.panel,.game-card,.drop,.tab-btn,.reason-btn,.choice-btn,select{
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
     }
+
     .hero{
       border-radius:22px;
       padding:18px;
@@ -56,16 +120,33 @@
       top:0;
       z-index:5;
     }
-    .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.15)}
-    .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.12)}
-    h1{margin:0;text-align:center;font-size:30px}
+
+    .hero.top-accent-nhl{
+      box-shadow:0 18px 50px rgba(96,165,250,.20);
+      border-color:rgba(191,230,255,.18);
+    }
+
+    .hero.top-accent-mlb{
+      box-shadow:0 18px 50px rgba(34,197,94,.18);
+      border-color:rgba(134,239,172,.16);
+    }
+
+    h1{
+      margin:0;
+      text-align:center;
+      font-size:30px;
+      letter-spacing:.4px;
+    }
+
     h2,h3{margin:0}
+
     .tabs{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:10px;
       margin-top:16px;
     }
+
     .tab-btn{
       appearance:none;
       background:var(--panel-2);
@@ -76,51 +157,119 @@
       font-weight:800;
       width:100%;
       text-align:center;
+      transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
+
+    .tab-btn:hover{transform:translateY(-1px)}
+
     .tab-btn.active{
       border-color:rgba(96,165,250,.55);
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
       background:linear-gradient(180deg, rgba(30,64,175,.45), rgba(15,23,42,.95));
     }
+
+    body.theme-mlb .tab-btn.active{
+      border-color:rgba(34,197,94,.46);
+      box-shadow:0 0 0 1px rgba(34,197,94,.42) inset;
+      background:linear-gradient(180deg, rgba(22,101,52,.42), rgba(15,23,42,.95));
+    }
+
     .panel{
       background:var(--panel);
       border-radius:20px;
       padding:16px;
       margin-bottom:14px;
+      position:relative;
+      overflow:hidden;
     }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 24%);
+      pointer-events:none;
+    }
+
     .section-head{
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:12px;
       margin-bottom:14px;
+      position:relative;
+      z-index:1;
     }
+
     .muted{color:var(--muted)}
+
     .grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:14px;
+      position:relative;
+      z-index:1;
     }
+
     .game-card{
       background:linear-gradient(180deg, rgba(15,30,50,.95), rgba(8,19,35,.98));
       border-radius:20px;
       padding:14px;
       cursor:pointer;
-      transition:transform .15s ease, border-color .15s ease;
+      transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
+
+    body.theme-nhl .game-card,
+    body.theme-nhl .drop{
+      background:
+        linear-gradient(180deg, rgba(13,31,52,.96), rgba(7,20,34,.98));
+    }
+
     body.theme-mlb .game-card,
     body.theme-mlb .drop{
-      background:linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
+      background:
+        linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
     }
+
     .game-card:hover{transform:translateY(-2px)}
+
     .game-card.active{
       border-color:rgba(96,165,250,.6);
-      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
+      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset, 0 16px 40px rgba(0,0,0,.22);
     }
-    .teams-line{font-size:22px;font-weight:800;margin-bottom:8px}
-    .score-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .score{font-size:30px;font-weight:900;letter-spacing:.5px;white-space:nowrap}
-    .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+    body.theme-mlb .game-card.active{
+      border-color:rgba(34,197,94,.52);
+      box-shadow:0 0 0 1px rgba(34,197,94,.42) inset, 0 16px 40px rgba(0,0,0,.22);
+    }
+
+    .teams-line{
+      font-size:22px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .score-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .score{
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:.5px;
+      white-space:nowrap;
+    }
+
+    .chip-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
     .chip{
       border:1px solid var(--line);
       background:rgba(2,10,18,.62);
@@ -129,44 +278,69 @@
       font-size:12px;
       color:var(--muted);
     }
+
+    body.theme-nhl .chip{
+      background:rgba(8,22,37,.72);
+    }
+
+    body.theme-mlb .chip{
+      background:rgba(8,24,15,.72);
+    }
+
     .drop{
       margin-top:12px;
-      background:linear-gradient(180deg, rgba(11,25,43,.95), rgba(8,18,31,.97));
       border-radius:18px;
       padding:16px;
       border:1px solid var(--line);
     }
+
     .pick-badge{
-      display:inline-flex;align-items:center;gap:8px;
-      border-radius:999px;padding:10px 14px;font-weight:900;font-size:16px
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:900;
+      font-size:16px;
     }
+
     .pick-green{background:rgba(34,197,94,.18);color:#bbf7d0;border:1px solid rgba(34,197,94,.38)}
     .pick-yellow{background:rgba(250,204,21,.18);color:#fde68a;border:1px solid rgba(250,204,21,.35)}
     .pick-red{background:rgba(239,68,68,.18);color:#fecaca;border:1px solid rgba(239,68,68,.35)}
+
     .mini-grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:10px;
       margin-top:12px;
     }
+
     .mini{
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
       background:rgba(2,10,18,.38);
     }
+
     .mini .label{color:var(--muted);font-size:12px}
     .mini .value{font-size:20px;font-weight:800;margin-top:6px}
     .good{color:#bbf7d0}
     .yellow{color:#fde68a}
     .red{color:#fecaca}
-    .reason-list{display:grid;gap:10px;margin-top:12px}
+
+    .reason-list{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
     .reason-item{
       border:1px solid var(--line);
       border-radius:16px;
       background:rgba(2,10,18,.34);
       overflow:hidden;
     }
+
     .reason-btn{
       width:100%;
       text-align:left;
@@ -177,16 +351,25 @@
       cursor:pointer;
       font-weight:800;
     }
-    .reason-body{display:none;padding:0 14px 14px;color:var(--muted);line-height:1.45}
+
+    .reason-body{
+      display:none;
+      padding:0 14px 14px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
     .reason-item.open .reason-body{display:block}
 
     .choice-list{display:grid;gap:12px}
+
     .choice-row{
       border:1px solid var(--line);
       border-radius:18px;
       padding:14px;
       background:rgba(2,10,18,.28);
     }
+
     .choice-head{
       display:flex;
       justify-content:space-between;
@@ -195,12 +378,14 @@
       flex-wrap:wrap;
       margin-bottom:10px;
     }
+
     .choice-picks{
       display:grid;
       grid-template-columns:repeat(2,1fr);
       gap:10px;
       margin-top:10px;
     }
+
     .choice-btn{
       appearance:none;
       background:var(--panel-2);
@@ -211,11 +396,21 @@
       font-weight:800;
       width:100%;
       text-align:center;
+      transition:transform .15s ease, border-color .15s ease;
     }
+
+    .choice-btn:hover{transform:translateY(-1px)}
+
     .choice-btn.active{
       border-color:rgba(96,165,250,.55);
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
     }
+
+    body.theme-mlb .choice-btn.active{
+      border-color:rgba(34,197,94,.55);
+      box-shadow:0 0 0 1px rgba(34,197,94,.45) inset;
+    }
+
     .status-pill{
       display:inline-flex;
       align-items:center;
@@ -225,6 +420,7 @@
       font-size:13px;
       border:1px solid var(--line);
     }
+
     .status-green{background:rgba(34,197,94,.18);color:#bbf7d0}
     .status-red{background:rgba(239,68,68,.18);color:#fecaca}
     .status-yellow{background:rgba(250,204,21,.18);color:#fde68a}
@@ -236,34 +432,45 @@
       align-items:center;
       flex-wrap:wrap;
       margin-bottom:14px;
+      position:relative;
+      z-index:1;
     }
+
     select{
       background:var(--panel-2);
       color:var(--text);
       padding:12px 14px;
       border-radius:14px;
       min-width:220px;
+      outline:none;
     }
+
     .table-wrap{
       overflow:auto;
       border:1px solid var(--line);
       border-radius:18px;
+      position:relative;
+      z-index:1;
     }
+
     table{
       width:100%;
       border-collapse:collapse;
       min-width:900px;
     }
+
     th,td{
       padding:10px 12px;
       border-bottom:1px solid rgba(148,163,184,.12);
       text-align:left;
       white-space:nowrap;
     }
+
     th{background:rgba(2,10,18,.35)}
     .tag-green{color:#bbf7d0;font-weight:800}
     .tag-red{color:#fecaca;font-weight:800}
     .tag-yellow{color:#fde68a;font-weight:800}
+
     .bar{
       width:160px;
       height:12px;
@@ -272,26 +479,35 @@
       overflow:hidden;
       position:relative;
     }
+
     .bar-fill{
       height:100%;
       background:linear-gradient(90deg, rgba(34,197,94,.9), rgba(96,165,250,.9));
     }
+
+    body.theme-mlb .bar-fill{
+      background:linear-gradient(90deg, rgba(34,197,94,.9), rgba(250,204,21,.75));
+    }
+
     .spark{
       display:flex;
       gap:4px;
       align-items:flex-end;
       height:22px;
     }
+
     .spark span{
       display:block;
       width:10px;
       border-radius:3px 3px 0 0;
       background:#64748b;
     }
+
     .spark .win{background:#22c55e}
     .spark .otw{background:#facc15}
     .spark .otl{background:#f59e0b}
     .spark .loss{background:#ef4444}
+
     .error{
       display:none;
       margin-top:12px;
@@ -301,14 +517,19 @@
       background:rgba(127,29,29,.25);
       color:#fecaca;
     }
+
     .empty{
       padding:40px 14px;
       text-align:center;
       color:var(--muted);
       border:1px dashed var(--line);
       border-radius:18px;
+      position:relative;
+      z-index:1;
     }
+
     .hidden{display:none}
+
     @media (max-width: 980px){
       .tabs{grid-template-columns:repeat(2,1fr)}
       .grid,.mini-grid{grid-template-columns:1fr}
@@ -383,22 +604,30 @@
       };
 
       function byId(id){ return document.getElementById(id); }
+
       function esc(v){
         return String(v == null ? '' : v)
           .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
           .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       }
+
       function fmtDateTime(v){
         if(!v) return '-';
         const d = new Date(v);
         return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
       }
+
       function showError(msg){
         const box = byId('topError');
-        if(!msg){ box.style.display='none'; box.textContent=''; return; }
+        if(!msg){
+          box.style.display='none';
+          box.textContent='';
+          return;
+        }
         box.style.display='block';
         box.textContent=msg;
       }
+
       async function getJSON(url){
         const res = await fetch(url,{cache:'no-store'});
         let data = null;
@@ -408,9 +637,11 @@
         }
         return data;
       }
+
       function storageKey(){
         return 'game_choices_' + state.sport;
       }
+
       function getSavedChoices(){
         try{
           return JSON.parse(localStorage.getItem(storageKey()) || '{}');
@@ -418,11 +649,13 @@
           return {};
         }
       }
+
       function saveChoice(gameId, teamCode){
         const data = getSavedChoices();
         data[String(gameId)] = teamCode;
         localStorage.setItem(storageKey(), JSON.stringify(data));
       }
+
       function setTheme(){
         const sport = state.sport;
         document.body.className = sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
@@ -430,6 +663,7 @@
         byId('titleText').textContent = sport === 'mlb' ? '⚾ Game Insights' : '🏒 Game Insights';
         byId('boardTitle').textContent = sport === 'mlb' ? 'Today’s MLB Games' : 'Today’s NHL Games';
       }
+
       function refreshTabButtons(){
         document.querySelectorAll('.tab-btn').forEach(function(btn){
           const tab = btn.getAttribute('data-tab');
@@ -440,6 +674,7 @@
           btn.classList.toggle('active', active);
         });
       }
+
       function switchTab(tab){
         if(tab === 'board'){
           byId('boardPanel').classList.remove('hidden');
@@ -455,15 +690,18 @@
           byId('analyzePanel').classList.remove('hidden');
         }
       }
+
       function boardGames(){
         const board = state.boards[state.sport];
         return (((board || {}).days || [])[0] || {}).games || [];
       }
+
       function findInsight(gameId){
         const payload = state.insights[state.sport];
         if(!payload || !payload.insights) return null;
         return payload.insights.find(function(x){ return String(x.gameId) === String(gameId); }) || null;
       }
+
       function derivePredictedScore(insight){
         const total = Number((insight && insight.projectedTotal) || (state.sport === 'nhl' ? 6 : 9));
         const homeProb = Number((insight && insight.homeWinProbability) || 50);
@@ -484,6 +722,7 @@
         }
         return { away: awayScore, home: homeScore };
       }
+
       function pickBadgeHtml(insight){
         if(!insight){
           return '<span class="pick-badge pick-red">Unavailable</span>';
@@ -493,6 +732,7 @@
         }
         return '<span class="pick-badge pick-green">Pick • ' + esc(insight.predictedWinner) + '</span>';
       }
+
       function reasonItem(reason){
         return '' +
           '<div class="reason-item">' +
@@ -500,10 +740,12 @@
             '<div class="reason-body">' + esc(reason.text) + '</div>' +
           '</div>';
       }
+
       function detailDropHtml(insight){
         if(!insight){
           return '<div class="drop"><div class="empty">Could not build this insight right now.</div></div>';
         }
+
         const pred = derivePredictedScore(insight);
         const loserClass = insight.tier === 'tight' ? 'yellow' : 'red';
 
@@ -562,6 +804,7 @@
             '<div class="reason-list">' + (insight.reasons || []).map(reasonItem).join('') + '</div>' +
           '</div>';
       }
+
       function renderBoard(){
         const games = boardGames();
         const host = byId('boardArea');
@@ -579,6 +822,7 @@
           const insight = findInsight(g.id);
           const pred = insight ? derivePredictedScore(insight) : null;
           const active = String(g.id) === String(openGameId) ? ' active' : '';
+
           return '' +
             '<div class="game-card' + active + '" data-game-id="' + esc(g.id) + '">' +
               '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
@@ -623,14 +867,16 @@
           }
         });
       }
+
       function choiceStatus(game, pickedCode){
+        const statusText = String(game.status || '');
         const finalish = state.sport === 'nhl'
           ? game.status === 'OFF'
-          : (String(game.status).toLowerCase().indexOf('final') !== -1);
+          : statusText.toLowerCase().indexOf('final') !== -1;
 
         const previewish = state.sport === 'nhl'
           ? (game.status === 'PRE' || game.status === 'FUT')
-          : (String(game.status).toLowerCase().indexOf('preview') !== -1 || String(game.status).toLowerCase().indexOf('scheduled') !== -1);
+          : (statusText.toLowerCase().indexOf('preview') !== -1 || statusText.toLowerCase().indexOf('scheduled') !== -1);
 
         const awayLeading = Number(game.awayScore) > Number(game.homeScore);
         const homeLeading = Number(game.homeScore) > Number(game.awayScore);
@@ -640,125 +886,144 @@
           return { cls:'status-gray', text:'No choice saved' };
         }
         if(previewish){
-          return { cls:'status-gray', text:'Currently not playing' };
+          return { cls:'status-gray', text:'Game not started' };
         }
         if(finalish){
-          if(!winningCode){
-            return { cls:'status-yellow', text:'Final • tied result feed' };
+          if(winningCode === pickedCode){
+            return { cls:'status-green', text:'Won' };
           }
-          return {
-            cls: pickedCode === winningCode ? 'status-green' : 'status-red',
-            text: pickedCode === winningCode ? 'Won choice' : 'Lost choice'
-          };
+          if(winningCode && winningCode !== pickedCode){
+            return { cls:'status-red', text:'Lost' };
+          }
+          return { cls:'status-yellow', text:'Final / tied state' };
         }
-        if(!winningCode){
-          return { cls:'status-yellow', text:'Live • tied ' + game.awayScore + '-' + game.homeScore };
+        if(winningCode === pickedCode){
+          return { cls:'status-green', text:'Live • currently winning' };
         }
-        return {
-          cls: pickedCode === winningCode ? 'status-green' : 'status-red',
-          text: 'Live • ' + game.awayScore + '-' + game.homeScore
-        };
+        if(winningCode && winningCode !== pickedCode){
+          return { cls:'status-red', text:'Live • currently losing' };
+        }
+        return { cls:'status-yellow', text:'Live • tied' };
       }
+
       function renderChoices(){
         const games = boardGames();
-        const saved = getSavedChoices();
+        const picks = getSavedChoices();
         const host = byId('choicesArea');
 
         if(!games.length){
-          host.innerHTML = '<div class="empty">No games available for today.</div>';
+          host.innerHTML = '<div class="empty">No games available right now.</div>';
           return;
         }
 
-        host.innerHTML = '<div class="choice-list">' + games.map(function(g){
-          const savedPick = saved[String(g.id)] || '';
-          const status = choiceStatus(g, savedPick);
-          return '' +
-            '<div class="choice-row">' +
-              '<div class="choice-head">' +
-                '<div>' +
-                  '<div><strong>' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</strong></div>' +
-                  '<div class="muted">' + esc(fmtDateTime(g.startTimeUTC)) + ' • ' + esc(g.venue || '') + '</div>' +
+        host.innerHTML =
+          '<div class="choice-list">' +
+          games.map(function(g){
+            const picked = picks[String(g.id)] || '';
+            const status = choiceStatus(g, picked);
+            return '' +
+              '<div class="choice-row">' +
+                '<div class="choice-head">' +
+                  '<div>' +
+                    '<div><strong>' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</strong></div>' +
+                    '<div class="muted" style="margin-top:4px;">' + esc(fmtDateTime(g.startTimeUTC)) + ' • ' + esc(g.venue || '') + '</div>' +
+                  '</div>' +
+                  '<span class="status-pill ' + esc(status.cls) + '">' + esc(status.text) + '</span>' +
                 '</div>' +
-                '<span class="status-pill ' + esc(status.cls) + '">' + esc(status.text) + '</span>' +
-              '</div>' +
-              '<div class="muted">Live/final score: ' + esc(g.awayScore) + ' - ' + esc(g.homeScore) + '</div>' +
-              '<div class="choice-picks">' +
-                '<button class="choice-btn ' + (savedPick === g.awayCode ? 'active' : '') + '" data-pick-game="' + esc(g.id) + '" data-pick-team="' + esc(g.awayCode) + '">' + esc(g.awayName) + '</button>' +
-                '<button class="choice-btn ' + (savedPick === g.homeCode ? 'active' : '') + '" data-pick-game="' + esc(g.id) + '" data-pick-team="' + esc(g.homeCode) + '">' + esc(g.homeName) + '</button>' +
-              '</div>' +
-            '</div>';
-        }).join('') + '</div>';
+                '<div class="choice-picks">' +
+                  '<button type="button" class="choice-btn' + (picked === g.awayCode ? ' active' : '') + '" data-game="' + esc(g.id) + '" data-team="' + esc(g.awayCode) + '">' + esc(g.awayName) + ' (' + esc(g.awayCode) + ')</button>' +
+                  '<button type="button" class="choice-btn' + (picked === g.homeCode ? ' active' : '') + '" data-game="' + esc(g.id) + '" data-team="' + esc(g.homeCode) + '">' + esc(g.homeName) + ' (' + esc(g.homeCode) + ')</button>' +
+                '</div>' +
+              '</div>';
+          }).join('') +
+          '</div>';
 
-        host.querySelectorAll('[data-pick-game]').forEach(function(btn){
+        host.querySelectorAll('.choice-btn').forEach(function(btn){
           btn.addEventListener('click', function(){
-            saveChoice(this.getAttribute('data-pick-game'), this.getAttribute('data-pick-team'));
+            const gameId = this.getAttribute('data-game');
+            const teamCode = this.getAttribute('data-team');
+            saveChoice(gameId, teamCode);
             renderChoices();
           });
         });
       }
-      function renderAnalyzeTable(payload){
-        const rows = payload.rows || [];
-        if(!rows.length){
-          return '<div class="empty">No completed matchup data found yet.</div>';
-        }
 
-        return '' +
-          '<div class="table-wrap">' +
-            '<table>' +
-              '<thead>' +
-                '<tr>' +
-                  '<th>Opponent</th>' +
-                  '<th>GP</th>' +
-                  '<th>W</th>' +
-                  '<th>L</th>' +
-                  '<th>OTW</th>' +
-                  '<th>OTL</th>' +
-                  '<th>GF</th>' +
-                  '<th>GA</th>' +
-                  '<th>GD</th>' +
-                  '<th>Graph</th>' +
-                  '<th>Recent</th>' +
-                '</tr>' +
-              '</thead>' +
-              '<tbody>' +
-                rows.map(function(r){
-                  const width = Math.max(4, Math.round((Number(r.scorePct) || 0) * 100));
-                  const trend = (r.trend || []).map(function(v){
-                    let cls = 'loss';
-                    let h = 8;
-                    if(v === 1){ cls = 'win'; h = 22; }
-                    else if(v === 0.5){ cls = 'otw'; h = 18; }
-                    else if(v === -0.5){ cls = 'otl'; h = 12; }
-                    return '<span class="' + cls + '" style="height:' + h + 'px"></span>';
-                  }).join('');
-                  return '' +
-                    '<tr>' +
-                      '<td><strong>' + esc(r.opponentCode) + '</strong> <span class="muted">' + esc(r.opponentName) + '</span></td>' +
-                      '<td>' + esc(r.games) + '</td>' +
-                      '<td class="tag-green">' + esc(r.wins) + '</td>' +
-                      '<td class="tag-red">' + esc(r.losses) + '</td>' +
-                      '<td class="tag-yellow">' + esc(r.otWins) + '</td>' +
-                      '<td class="tag-yellow">' + esc(r.otLosses) + '</td>' +
-                      '<td>' + esc(r.gf) + '</td>' +
-                      '<td>' + esc(r.ga) + '</td>' +
-                      '<td class="' + ((Number(r.goalDiff) >= 0) ? 'tag-green' : 'tag-red') + '">' + esc(r.goalDiff) + '</td>' +
-                      '<td><div class="bar"><div class="bar-fill" style="width:' + width + '%"></div></div></td>' +
-                      '<td><div class="spark">' + trend + '</div></td>' +
-                    '</tr>';
-                }).join('') +
-              '</tbody>' +
-            '</table>' +
-          '</div>';
+      function sparkHtml(trend){
+        const vals = Array.isArray(trend) ? trend : [];
+        if(!vals.length){
+          return '<div class="spark"><span style="height:10px;"></span></div>';
+        }
+        return '<div class="spark">' + vals.map(function(v){
+          const cls = v === 1 ? 'win' : v === 0.5 ? 'otw' : v === -0.5 ? 'otl' : 'loss';
+          const h = v === 1 ? 22 : v === 0.5 ? 18 : v === -0.5 ? 14 : 10;
+          return '<span class="' + cls + '" style="height:' + h + 'px;"></span>';
+        }).join('') + '</div>';
       }
+
       async function loadAnalyze(teamCode){
-        if(!teamCode) return;
-        byId('analyzeArea').innerHTML = '<div class="empty">Loading matchup history...</div>';
-        const payload = await getJSON('/api/team-analyze/' + state.sport + '/' + encodeURIComponent(teamCode));
-        state.analyze[state.sport] = payload;
-        byId('analyzeArea').innerHTML =
-          '<div class="muted" style="margin-bottom:12px;"><strong>' + esc(payload.teamName) + '</strong> season matchup sheet</div>' +
-          renderAnalyzeTable(payload);
+        const host = byId('analyzeArea');
+        host.innerHTML = '<div class="empty">Loading matchup history...</div>';
+
+        try{
+          const payload = await getJSON('/api/team-analyze/' + state.sport + '/' + encodeURIComponent(teamCode));
+          state.analyze[state.sport] = payload;
+
+          const rows = payload.rows || [];
+          if(!rows.length){
+            host.innerHTML = '<div class="empty">No matchup history available yet.</div>';
+            return;
+          }
+
+          host.innerHTML =
+            '<div class="table-wrap">' +
+              '<table>' +
+                '<thead>' +
+                  '<tr>' +
+                    '<th>Opponent</th>' +
+                    '<th>Games</th>' +
+                    '<th>Wins</th>' +
+                    '<th>Losses</th>' +
+                    '<th>OTW</th>' +
+                    '<th>OTL</th>' +
+                    '<th>GF</th>' +
+                    '<th>GA</th>' +
+                    '<th>Diff</th>' +
+                    '<th>Score %</th>' +
+                    '<th>Graph</th>' +
+                    '<th>Trend</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+                  rows.map(function(r){
+                    const diff = Number(r.goalDiff || 0);
+                    const pct = Number(r.scorePct || 0);
+                    const pctWidth = Math.max(0, Math.min(100, Math.round(pct * 100)));
+                    const diffCls = diff > 0 ? 'tag-green' : diff < 0 ? 'tag-red' : 'tag-yellow';
+                    return '' +
+                      '<tr>' +
+                        '<td><strong>' + esc(r.opponentName) + '</strong> <span class="muted">(' + esc(r.opponentCode) + ')</span></td>' +
+                        '<td>' + esc(r.games) + '</td>' +
+                        '<td class="tag-green">' + esc(r.wins) + '</td>' +
+                        '<td class="tag-red">' + esc(r.losses) + '</td>' +
+                        '<td class="tag-yellow">' + esc(r.otWins || 0) + '</td>' +
+                        '<td class="tag-yellow">' + esc(r.otLosses || 0) + '</td>' +
+                        '<td>' + esc(r.gf) + '</td>' +
+                        '<td>' + esc(r.ga) + '</td>' +
+                        '<td class="' + diffCls + '">' + esc(diff) + '</td>' +
+                        '<td>' + esc((pct * 100).toFixed(1)) + '%</td>' +
+                        '<td><div class="bar"><div class="bar-fill" style="width:' + pctWidth + '%;"></div></div></td>' +
+                        '<td>' + sparkHtml(r.trend) + '</td>' +
+                      '</tr>';
+                  }).join('') +
+                '</tbody>' +
+              '</table>' +
+            '</div>';
+        }catch(err){
+          host.innerHTML = '<div class="empty">Could not load team analyze data.</div>';
+          showError('Could not load analyze data: ' + err.message);
+        }
       }
+
       async function ensureData(){
         if(!state.boards[state.sport]){
           state.boards[state.sport] = await getJSON('/api/board/' + state.sport);
@@ -774,6 +1039,7 @@
           if(list[0]) state.selectedAnalyzeTeamBySport[state.sport] = list[0].code;
         }
       }
+
       function renderTeamSelect(){
         const teams = ((state.teams[state.sport] || {}).teams || []);
         const sel = byId('teamSelect');
@@ -782,6 +1048,7 @@
           return '<option value="' + esc(t.code) + '"' + (t.code === selected ? ' selected' : '') + '>' + esc(t.name) + ' (' + esc(t.code) + ')</option>';
         }).join('');
       }
+
       async function fullRender(){
         try{
           showError('');
