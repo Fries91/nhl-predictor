@@ -8,16 +8,14 @@
   <meta name="apple-mobile-web-app-title" content="Game Insights">
   <style>
     :root{
-      --bg:#06111f;
-      --panel:rgba(7,17,31,.86);
-      --panel-2:rgba(12,28,48,.92);
+      --panel:rgba(7,17,31,.88);
+      --panel-2:rgba(12,28,48,.94);
       --line:rgba(148,163,184,.18);
       --text:#edf2f7;
       --muted:#93a4ba;
       --green:#22c55e;
       --yellow:#facc15;
       --red:#ef4444;
-      --blue:#60a5fa;
       --shadow:0 18px 50px rgba(0,0,0,.28);
     }
     *{box-sizing:border-box}
@@ -43,7 +41,7 @@
         linear-gradient(180deg,#0b1f10 0%, #102818 100%);
     }
     .wrap{max-width:1280px;margin:0 auto;padding:16px}
-    .hero,.panel,.game-card,.insight-card,.tab-btn,.day-btn,.reason-btn{
+    .hero,.panel,.game-card,.detail-drop,.tab-btn,.day-btn,.reason-btn{
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       backdrop-filter:blur(10px);
@@ -63,7 +61,7 @@
     h2,h3,h4{margin:0}
     .tabs{
       display:grid;
-      grid-template-columns:repeat(3,1fr);
+      grid-template-columns:repeat(2,1fr);
       gap:10px;
       margin-top:16px;
     }
@@ -83,7 +81,11 @@
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
       background:linear-gradient(180deg, rgba(30,64,175,.45), rgba(15,23,42,.95));
     }
-    .panel{background:var(--panel);border-radius:20px;padding:16px}
+    .panel{
+      background:var(--panel);
+      border-radius:20px;
+      padding:16px;
+    }
     .section-head{
       display:flex;
       justify-content:space-between;
@@ -98,7 +100,11 @@
       gap:10px;
       margin-bottom:14px;
     }
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
     .game-card{
       background:linear-gradient(180deg, rgba(15,30,50,.95), rgba(8,19,35,.98));
       border-radius:20px;
@@ -116,7 +122,12 @@
     }
     .teams-line{font-size:22px;font-weight:800;margin-bottom:8px}
     .score-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .score{font-size:28px;font-weight:900;letter-spacing:.5px}
+    .score{
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:.5px;
+      white-space:nowrap;
+    }
     .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .chip{
       border:1px solid var(--line);
@@ -126,13 +137,13 @@
       font-size:12px;
       color:var(--muted);
     }
-    .insight-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-    .insight-card{
+    .detail-drop{
+      margin-top:12px;
       background:linear-gradient(180deg, rgba(11,25,43,.95), rgba(8,18,31,.97));
-      border-radius:20px;
+      border-radius:18px;
       padding:16px;
     }
-    body.theme-mlb .insight-card{
+    body.theme-mlb .detail-drop{
       background:linear-gradient(180deg, rgba(16,44,24,.95), rgba(9,25,15,.97));
     }
     .pick-badge{
@@ -147,7 +158,12 @@
     .pick-green{background:rgba(34,197,94,.18);color:#bbf7d0;border:1px solid rgba(34,197,94,.38)}
     .pick-yellow{background:rgba(250,204,21,.18);color:#fde68a;border:1px solid rgba(250,204,21,.35)}
     .pick-red{background:rgba(239,68,68,.18);color:#fecaca;border:1px solid rgba(239,68,68,.35)}
-    .pick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+    .pick-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:12px;
+    }
     .mini{
       border:1px solid var(--line);
       border-radius:16px;
@@ -159,7 +175,7 @@
     .good{color:#bbf7d0}
     .yellow{color:#fde68a}
     .red{color:#fecaca}
-    .reason-list{display:grid;gap:10px}
+    .reason-list{display:grid;gap:10px;margin-top:12px}
     .reason-item{
       border:1px solid var(--line);
       border-radius:16px;
@@ -195,10 +211,8 @@
       border-radius:18px;
     }
     @media (max-width: 980px){
-      .grid,.insight-layout,.pick-grid{grid-template-columns:1fr}
+      .grid,.pick-grid{grid-template-columns:1fr}
       h1{font-size:26px}
-      .tabs{grid-template-columns:1fr}
-      .day-tabs{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -210,33 +224,24 @@
       <div class="tabs">
         <button class="tab-btn active" data-sport="nhl">NHL</button>
         <button class="tab-btn" data-sport="mlb">MLB</button>
-        <button class="tab-btn" data-sport="insights">Game Insights</button>
       </div>
 
       <div class="error" id="topError"></div>
     </div>
 
-    <div class="panel" style="margin-bottom:16px;">
+    <div class="panel">
       <div class="section-head">
         <strong>Next 2 days</strong>
         <span class="muted" id="boardHint">Loading...</span>
       </div>
+
       <div class="day-tabs">
         <button class="day-btn active" data-day="0">Day 1</button>
         <button class="day-btn" data-day="1">Day 2</button>
       </div>
+
       <div id="boardArea" class="grid">
         <div class="empty">Loading board...</div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="section-head">
-        <strong id="detailTitle">Selected game insight</strong>
-        <span class="muted" id="detailHint">Pick a game card</span>
-      </div>
-      <div id="detailArea">
-        <div class="empty">Tap a game card to see the live score and insight panel.</div>
       </div>
     </div>
   </div>
@@ -244,8 +249,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const state = {
-        view: 'nhl',
-        boardSport: 'nhl',
+        sport: 'nhl',
         dayIndex: 0,
         boards: { nhl: null, mlb: null },
         insights: { nhl: null, mlb: null },
@@ -271,7 +275,8 @@
       function showError(msg){
         const box = byId('topError');
         if(!msg){ box.style.display='none'; box.textContent=''; return; }
-        box.style.display='block'; box.textContent=msg;
+        box.style.display='block';
+        box.textContent=msg;
       }
       async function getJSON(url){
         const res = await fetch(url,{cache:'no-store'});
@@ -282,93 +287,47 @@
         }
         return data;
       }
-      function activeSport(){
-        return state.view === 'insights' ? state.boardSport : state.view;
-      }
       function setTheme(){
-        const sport = activeSport();
+        const sport = state.sport;
         document.body.className = sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
         byId('hero').className = 'hero ' + (sport === 'mlb' ? 'top-accent-mlb' : 'top-accent-nhl');
         byId('titleText').textContent = sport === 'mlb' ? '⚾ MLB Game Insights' : '🏒 NHL Game Insights';
       }
-      function refreshTabButtons(){
+      function refreshButtons(){
         document.querySelectorAll('.tab-btn').forEach(function(btn){
-          btn.classList.toggle('active', btn.getAttribute('data-sport') === state.view);
+          btn.classList.toggle('active', btn.getAttribute('data-sport') === state.sport);
         });
         document.querySelectorAll('.day-btn').forEach(function(btn){
           btn.classList.toggle('active', Number(btn.getAttribute('data-day')) === state.dayIndex);
         });
       }
-      function scoreStatusText(game){
-        if(game.sport === 'mlb' && game.inningState){
-          return game.status + ' • ' + game.inningState + ' ' + (game.currentInning || '');
-        }
-        if(game.status === 'OFF'){
-          return 'Final';
-        }
-        return game.status + ' • ' + fmtDateTime(game.startTimeUTC);
-      }
-      function renderBoard(){
-        const sport = activeSport();
-        const board = state.boards[sport];
-        const host = byId('boardArea');
-        if(!board || !board.days || !board.days.length){
-          host.innerHTML = '<div class="empty">No games loaded.</div>';
-          byId('boardHint').textContent = 'No board';
-          return;
-        }
-        const day = board.days[state.dayIndex] || board.days[0];
-        const games = (day && day.games) || [];
-        byId('boardHint').textContent = (day.label || ('Day ' + (state.dayIndex + 1))) + ' • ' + shortDate(day.date);
-
-        if(!games.length){
-          host.innerHTML = '<div class="empty">No games on this day.</div>';
-          return;
-        }
-
-        const selectedId = state.selectedGameIdBySport[sport];
-        host.innerHTML = games.map(function(g){
-          const active = String(g.id) === String(selectedId) ? ' active' : '';
-          const score = (g.awayScore != null && g.homeScore != null)
-            ? (esc(g.awayScore) + ' - ' + esc(g.homeScore))
-            : '-';
-          return '' +
-            '<div class="game-card' + active + '" data-game-id="' + esc(g.id) + '">' +
-              '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
-              '<div class="score-row">' +
-                '<div>' +
-                  '<div><strong>' + esc(g.awayName) + '</strong></div>' +
-                  '<div><strong>' + esc(g.homeName) + '</strong></div>' +
-                '</div>' +
-                '<div class="score">' + score + '</div>' +
-              '</div>' +
-              '<div class="chip-row">' +
-                '<div class="chip">' + esc(scoreStatusText(g)) + '</div>' +
-                '<div class="chip">' + esc(g.venue || '') + '</div>' +
-                (sport === 'mlb'
-                  ? '<div class="chip">' + esc((g.awayProbablePitcher || 'TBD') + ' vs ' + (g.homeProbablePitcher || 'TBD')) + '</div>'
-                  : '') +
-              '</div>' +
-            '</div>';
-        }).join('');
-
-        host.querySelectorAll('[data-game-id]').forEach(function(el){
-          el.addEventListener('click', function(){
-            state.selectedGameIdBySport[sport] = this.getAttribute('data-game-id');
-            renderBoard();
-            renderDetail();
-          });
-        });
-      }
-      function selectedInsight(){
-        const sport = activeSport();
-        const payload = state.insights[sport];
+      function findInsight(gameId){
+        const payload = state.insights[state.sport];
         if(!payload || !payload.insights) return null;
-        const selectedId = state.selectedGameIdBySport[sport];
-        if(selectedId == null){
-          return payload.insights[0] || null;
+        return payload.insights.find(function(x){ return String(x.gameId) === String(gameId); }) || null;
+      }
+      function derivePredictedScore(insight){
+        const total = Number(insight && insight.projectedTotal || 0) || (state.sport === 'nhl' ? 6 : 9);
+        const homeProb = Number(insight && insight.homeWinProbability || 50);
+        let margin = (homeProb - 50) / (state.sport === 'nhl' ? 11 : 8);
+        const maxMargin = state.sport === 'nhl' ? 2.2 : 3.5;
+        if (margin > maxMargin) margin = maxMargin;
+        if (margin < -maxMargin) margin = -maxMargin;
+
+        let homeRaw = (total / 2) + margin / 2;
+        let awayRaw = total - homeRaw;
+
+        let homeScore = Math.max(0, Math.round(homeRaw));
+        let awayScore = Math.max(0, Math.round(awayRaw));
+
+        if (homeScore === awayScore) {
+          if ((insight && insight.predictedWinner) === insight.homeCode) homeScore += 1;
+          else awayScore += 1;
         }
-        return payload.insights.find(function(x){ return String(x.gameId) === String(selectedId); }) || payload.insights[0] || null;
+        return { away: awayScore, home: homeScore };
+      }
+      function statusText(game){
+        return fmtDateTime(game.startTimeUTC);
       }
       function pickBadgeHtml(insight){
         if(insight.error){
@@ -386,65 +345,107 @@
             '<div class="reason-body">' + esc(reason.text) + '</div>' +
           '</div>';
       }
-      function renderDetail(){
-        const sport = activeSport();
-        const insight = selectedInsight();
-        const host = byId('detailArea');
+      function detailDropHtml(insight){
         if(!insight){
-          host.innerHTML = '<div class="empty">Tap a game card to see the live score and insight panel.</div>';
-          byId('detailHint').textContent = 'Pick a game card';
-          return;
+          return '<div class="detail-drop"><div class="empty">Could not build this insight right now.</div></div>';
         }
-        state.selectedGameIdBySport[sport] = insight.gameId;
-        byId('detailHint').textContent = shortDate(insight.date) + ' • ' + fmtDateTime(insight.startTimeUTC);
-
         if(insight.error){
-          host.innerHTML = '<div class="empty">Could not build this insight right now.</div>';
-          return;
+          return '<div class="detail-drop"><div class="empty">Could not build this insight right now.</div></div>';
         }
 
         const loserClass = insight.tier === 'tight' ? 'yellow' : 'red';
-        host.innerHTML = '' +
-          '<div class="insight-layout">' +
-            '<div class="insight-card">' +
-              '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
-                '<div>' +
-                  '<h2>' + esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) + '</h2>' +
-                  '<div class="muted" style="margin-top:6px;">' + esc(insight.awayName) + ' vs ' + esc(insight.homeName) + ' • ' + esc(insight.venue || '') + '</div>' +
-                '</div>' +
-                pickBadgeHtml(insight) +
-              '</div>' +
+        const pred = derivePredictedScore(insight);
 
-              '<div class="pick-grid">' +
-                '<div class="mini"><div class="label">Predicted winner</div><div class="value good">' + esc(insight.predictedWinner) + '</div></div>' +
-                '<div class="mini"><div class="label">Predicted loser</div><div class="value ' + loserClass + '">' + esc(insight.predictedLoser) + '</div></div>' +
-                '<div class="mini"><div class="label">Live score</div><div class="value">' + esc(insight.live.awayScore) + ' - ' + esc(insight.live.homeScore) + '</div></div>' +
-                '<div class="mini"><div class="label">Game state</div><div class="value" style="font-size:18px;">' + esc(insight.live.status || '-') + '</div></div>' +
-                '<div class="mini"><div class="label">Confidence</div><div class="value">' + esc(insight.confidence) + '%</div></div>' +
-                '<div class="mini"><div class="label">Projected total ' + (sport === 'nhl' ? 'goals' : 'runs') + '</div><div class="value">' + esc(insight.projectedTotal) + '</div></div>' +
+        return '' +
+          '<div class="detail-drop">' +
+            '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
+              '<div>' +
+                '<h3>' + esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) + '</h3>' +
+                '<div class="muted" style="margin-top:6px;">' + esc(insight.awayName) + ' vs ' + esc(insight.homeName) + ' • ' + esc(insight.venue || '') + '</div>' +
               '</div>' +
-
-              '<div class="chip-row">' +
-                (sport === 'nhl'
-                  ? '<div class="chip">Likely point team: ' + esc(insight.likelyPointTeam) + '</div>'
-                  : '<div class="chip">Probable pitchers: ' + esc((insight.probablePitchers.away || 'TBD') + ' vs ' + (insight.probablePitchers.home || 'TBD')) + '</div>') +
-                '<div class="chip">Prediction refreshed: ' + esc(fmtDateTime(insight.lastPredictionRefreshUTC)) + '</div>' +
-              '</div>' +
+              pickBadgeHtml(insight) +
             '</div>' +
 
-            '<div class="insight-card">' +
-              '<h3 style="margin-bottom:12px;">Why this edge</h3>' +
-              '<div class="reason-list">' +
-                (insight.reasons || []).map(reasonItem).join('') +
-              '</div>' +
+            '<div class="pick-grid">' +
+              '<div class="mini"><div class="label">Predicted score</div><div class="value">' + esc(pred.away) + ' - ' + esc(pred.home) + '</div></div>' +
+              '<div class="mini"><div class="label">Predicted winner</div><div class="value good">' + esc(insight.predictedWinner) + '</div></div>' +
+              '<div class="mini"><div class="label">Predicted loser</div><div class="value ' + loserClass + '">' + esc(insight.predictedLoser) + '</div></div>' +
+              '<div class="mini"><div class="label">Confidence</div><div class="value">' + esc(insight.confidence) + '%</div></div>' +
+              '<div class="mini"><div class="label">Projected total ' + (state.sport === 'nhl' ? 'goals' : 'runs') + '</div><div class="value">' + esc(insight.projectedTotal) + '</div></div>' +
+              '<div class="mini"><div class="label">Updated</div><div class="value" style="font-size:16px;">' + esc(fmtDateTime(insight.lastPredictionRefreshUTC)) + '</div></div>' +
+            '</div>' +
+
+            '<div class="chip-row">' +
+              (state.sport === 'nhl'
+                ? '<div class="chip">Likely point team: ' + esc(insight.likelyPointTeam) + '</div>'
+                : '<div class="chip">Probable pitchers: ' + esc((insight.probablePitchers.away || 'TBD') + ' vs ' + (insight.probablePitchers.home || 'TBD')) + '</div>') +
+            '</div>' +
+
+            '<div class="reason-list">' +
+              (insight.reasons || []).map(reasonItem).join('') +
             '</div>' +
           '</div>';
+      }
+      function renderBoard(){
+        const board = state.boards[state.sport];
+        const host = byId('boardArea');
+
+        if(!board || !board.days || !board.days.length){
+          host.innerHTML = '<div class="empty">No games loaded.</div>';
+          byId('boardHint').textContent = 'No board';
+          return;
+        }
+
+        const day = board.days[state.dayIndex] || board.days[0];
+        const games = (day && day.games) || [];
+        byId('boardHint').textContent = (day.label || ('Day ' + (state.dayIndex + 1))) + ' • ' + shortDate(day.date);
+
+        if(!games.length){
+          host.innerHTML = '<div class="empty">No games on this day.</div>';
+          return;
+        }
+
+        const selectedId = state.selectedGameIdBySport[state.sport];
+        host.innerHTML = games.map(function(g){
+          const insight = findInsight(g.id);
+          const pred = insight && !insight.error ? derivePredictedScore(insight) : null;
+          const active = String(g.id) === String(selectedId) ? ' active' : '';
+          const drop = String(g.id) === String(selectedId) ? detailDropHtml(insight) : '';
+          return '' +
+            '<div class="game-card' + active + '" data-game-id="' + esc(g.id) + '">' +
+              '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
+              '<div class="score-row">' +
+                '<div>' +
+                  '<div><strong>' + esc(g.awayName) + '</strong></div>' +
+                  '<div><strong>' + esc(g.homeName) + '</strong></div>' +
+                '</div>' +
+                '<div class="score">' + (pred ? (esc(pred.away) + ' - ' + esc(pred.home)) : '-') + '</div>' +
+              '</div>' +
+              '<div class="chip-row">' +
+                '<div class="chip">Predicted score</div>' +
+                '<div class="chip">' + esc(statusText(g)) + '</div>' +
+                '<div class="chip">' + esc(g.venue || '') + '</div>' +
+              '</div>' +
+              drop +
+            '</div>';
+        }).join('');
+
+        host.querySelectorAll('[data-game-id]').forEach(function(el){
+          el.addEventListener('click', function(){
+            const gameId = this.getAttribute('data-game-id');
+            state.selectedGameIdBySport[state.sport] = String(gameId) === String(state.selectedGameIdBySport[state.sport]) ? null : gameId;
+            renderBoard();
+          });
+        });
 
         host.querySelectorAll('.reason-item').forEach(function(item){
           const btn = item.querySelector('.reason-btn');
-          btn.addEventListener('click', function(){
-            item.classList.toggle('open');
-          });
+          if(btn){
+            btn.addEventListener('click', function(ev){
+              ev.stopPropagation();
+              item.classList.toggle('open');
+            });
+          }
         });
       }
       async function ensureData(sport){
@@ -454,71 +455,44 @@
         if(!state.insights[sport]){
           state.insights[sport] = await getJSON('/api/insights/' + sport);
         }
-        if(state.selectedGameIdBySport[sport] == null){
-          const first = (((state.boards[sport] || {}).days || [])[0] || {}).games || [];
-          if(first[0]) state.selectedGameIdBySport[sport] = first[0].id;
-        }
       }
       async function fullReload(){
         try{
           showError('');
-          await ensureData(activeSport());
+          await ensureData(state.sport);
           setTheme();
-          refreshTabButtons();
+          refreshButtons();
           renderBoard();
-          renderDetail();
         }catch(err){
           showError('Could not load data: ' + err.message);
           byId('boardArea').innerHTML = '<div class="empty">Could not load board.</div>';
-          byId('detailArea').innerHTML = '<div class="empty">Could not load insight panel.</div>';
         }
       }
 
       document.querySelectorAll('.tab-btn').forEach(function(btn){
         btn.addEventListener('click', async function(){
-          state.view = this.getAttribute('data-sport');
-          if(state.view === 'nhl' || state.view === 'mlb'){
-            state.boardSport = state.view;
-          }
+          state.sport = this.getAttribute('data-sport');
           await fullReload();
         });
       });
+
       document.querySelectorAll('.day-btn').forEach(function(btn){
         btn.addEventListener('click', function(){
           state.dayIndex = Number(this.getAttribute('data-day')) || 0;
-          refreshTabButtons();
+          refreshButtons();
           renderBoard();
-          renderDetail();
         });
       });
 
       fullReload();
+
       setInterval(async function(){
-        const sport = activeSport();
         try{
-          if(state.boards[sport]){
-            state.boards[sport] = await getJSON('/api/board/' + sport);
-            renderBoard();
-            renderDetail();
-          }
-        }catch(e){}
-      }, 300000);
-      setInterval(async function(){
-        const sport = activeSport();
-        try{
-          state.insights[sport] = await getJSON('/api/insights/' + sport);
-          renderDetail();
+          state.boards[state.sport] = await getJSON('/api/board/' + state.sport);
+          state.insights[state.sport] = await getJSON('/api/insights/' + state.sport);
+          renderBoard();
         }catch(e){}
       }, 900000);
-      setInterval(async function(){
-        const sport = activeSport();
-        try{
-          state.boards[sport] = await getJSON('/api/board/' + sport);
-          state.insights[sport] = await getJSON('/api/insights/' + sport);
-          renderBoard();
-          renderDetail();
-        }catch(e){}
-      }, 28800000);
     });
   </script>
 </body>
