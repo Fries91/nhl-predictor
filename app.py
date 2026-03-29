@@ -21,7 +21,7 @@ PRED_TTL = 900
 ANALYZE_TTL = 3600
 
 session = requests.Session()
-session.headers.update({"User-Agent": "Game-Insights/3.4"})
+session.headers.update({"User-Agent": "Game-Insights/3.5"})
 
 _cache: dict[str, tuple[float, Any]] = {}
 
@@ -163,7 +163,11 @@ def nhl_board() -> dict[str, Any]:
 
     for day in data.get("gameWeek", []) or []:
         if day.get("date") == today:
-            games = [nhl_parse_board_game(g) for g in (day.get("games") or [])]
+            parsed = [nhl_parse_board_game(g) for g in (day.get("games") or [])]
+            for g in parsed:
+                if not g.get("date"):
+                    g["date"] = today
+            games = parsed
             break
 
     games.sort(key=lambda g: safe_str(g.get("startTimeUTC")))
@@ -257,7 +261,7 @@ def nhl_completed_games(schedule: list[dict[str, Any]]) -> list[dict[str, Any]]:
     )
 
 
-def nhl_hot_assist_pick(team_code: str, last_n: int = 5) -> dict[str, Any]:
+def nhl_point_scorer_pick(team_code: str, last_n: int = 2) -> dict[str, Any]:
     schedule = nhl_schedule(team_code)
     completed = nhl_completed_games(schedule)[:last_n]
 
@@ -265,8 +269,9 @@ def nhl_hot_assist_pick(team_code: str, last_n: int = 5) -> dict[str, Any]:
         return {
             "teamCode": team_code,
             "player": "No data",
-            "assistsLast3": 0,
             "pointsLast3": 0,
+            "goalsLast3": 0,
+            "assistsLast3": 0,
             "gamesUsed": 0,
             "reason": "No completed games found.",
         }
@@ -286,7 +291,6 @@ def nhl_hot_assist_pick(team_code: str, last_n: int = 5) -> dict[str, Any]:
         away_code = nhl_team_code_from_side(away)
         home_code = nhl_team_code_from_side(home)
 
-        side = None
         if away_code == team_code:
             side = away
         elif home_code == team_code:
@@ -299,7 +303,7 @@ def nhl_hot_assist_pick(team_code: str, last_n: int = 5) -> dict[str, Any]:
             continue
 
         box_games_used += 1
-        weight = max(1.0, 1.4 - (idx * 0.15))
+        weight = 1.2 if idx == 0 else 1.0
 
         for p in skaters:
             name = nhl_player_name(p)
@@ -311,32 +315,37 @@ def nhl_hot_assist_pick(team_code: str, last_n: int = 5) -> dict[str, Any]:
                 name,
                 {
                     "player": name,
-                    "weightedAssists": 0.0,
                     "weightedPoints": 0.0,
-                    "rawAssists": 0,
+                    "weightedGoals": 0.0,
+                    "weightedAssists": 0.0,
                     "rawPoints": 0,
+                    "rawGoals": 0,
+                    "rawAssists": 0,
                     "gamesUsed": 0,
-                    "gamesWithAssist": 0,
                     "gamesWithPoint": 0,
+                    "gamesWithGoal": 0,
                 },
             )
 
-            row["weightedAssists"] += assists * weight
             row["weightedPoints"] += points * weight
-            row["rawAssists"] += assists
+            row["weightedGoals"] += goals * weight
+            row["weightedAssists"] += assists * weight
             row["rawPoints"] += points
+            row["rawGoals"] += goals
+            row["rawAssists"] += assists
             row["gamesUsed"] += 1
-            if assists > 0:
-                row["gamesWithAssist"] += 1
             if points > 0:
                 row["gamesWithPoint"] += 1
+            if goals > 0:
+                row["gamesWithGoal"] += 1
 
     if not totals:
         return {
             "teamCode": team_code,
             "player": "No data",
-            "assistsLast3": 0,
             "pointsLast3": 0,
+            "goalsLast3": 0,
+            "assistsLast3": 0,
             "gamesUsed": box_games_used,
             "reason": "Boxscore player data unavailable.",
         }
@@ -344,10 +353,11 @@ def nhl_hot_assist_pick(team_code: str, last_n: int = 5) -> dict[str, Any]:
     ranked = sorted(
         totals.values(),
         key=lambda x: (
-            -x["weightedAssists"],
-            -x["gamesWithAssist"],
             -x["weightedPoints"],
             -x["gamesWithPoint"],
+            -x["weightedGoals"],
+            -x["gamesWithGoal"],
+            -x["weightedAssists"],
             x["player"],
         ),
     )
@@ -356,10 +366,11 @@ def nhl_hot_assist_pick(team_code: str, last_n: int = 5) -> dict[str, Any]:
     return {
         "teamCode": team_code,
         "player": best["player"],
-        "assistsLast3": best["rawAssists"],
         "pointsLast3": best["rawPoints"],
+        "goalsLast3": best["rawGoals"],
+        "assistsLast3": best["rawAssists"],
         "gamesUsed": best["gamesUsed"],
-        "reason": f"Best recent setup trend: {best['rawAssists']} assists in {best['gamesUsed']} recent completed games.",
+        "reason": f"Best recent point trend: {best['rawPoints']} points in {best['gamesUsed']} recent completed games.",
     }
 
 
@@ -455,8 +466,9 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     away_strength = nhl_strength(away)
     home_strength = nhl_strength(home)
 
-    away_rest = nhl_rest_days(away_sched, game["date"])
-    home_rest = nhl_rest_days(home_sched, game["date"])
+    game_date = game.get("date") or today_utc_str()
+    away_rest = nhl_rest_days(away_sched, game_date)
+    home_rest = nhl_rest_days(home_sched, game_date)
 
     away_streak = nhl_streak(away_sched, 6)
     home_streak = nhl_streak(home_sched, 6)
@@ -464,13 +476,10 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     score = 0.0
     score += (home_strength["points_pct"] - away_strength["points_pct"]) * 3.0
     score += (home_strength["goal_diff_pg"] - away_strength["goal_diff_pg"]) * 1.1
-
     score += (home_form_10["win_pct"] - away_form_10["win_pct"]) * 1.1
     score += (home_form_10["avg_diff"] - away_form_10["avg_diff"]) * 0.30
-
     score += (home_form_5["win_pct"] - away_form_5["win_pct"]) * 1.6
     score += (home_form_5["avg_diff"] - away_form_5["avg_diff"]) * 0.45
-
     score += (home_split["win_pct"] - away_split["win_pct"]) * 0.95
     score += ((home_split["gf"] - home_split["ga"]) - (away_split["gf"] - away_split["ga"])) * 0.12
 
@@ -494,13 +503,33 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     projected_total += ((home_split["gf"] + away_split["gf"]) - (home_split["ga"] + away_split["ga"])) * 0.05
     projected_total = max(4.5, min(8.5, projected_total))
 
-    away_player_pick = nhl_hot_assist_pick(away, last_n=5)
-    home_player_pick = nhl_hot_assist_pick(home, last_n=5)
+    if game.get("status") in {"PRE", "FUT"}:
+        away_player_pick = nhl_point_scorer_pick(away, last_n=2)
+        home_player_pick = nhl_point_scorer_pick(home, last_n=2)
+    else:
+        away_player_pick = {
+            "teamCode": away,
+            "player": "Pregame only",
+            "pointsLast3": 0,
+            "goalsLast3": 0,
+            "assistsLast3": 0,
+            "gamesUsed": 0,
+            "reason": "Point-scorer pick skipped once game is live/final."
+        }
+        home_player_pick = {
+            "teamCode": home,
+            "player": "Pregame only",
+            "pointsLast3": 0,
+            "goalsLast3": 0,
+            "assistsLast3": 0,
+            "gamesUsed": 0,
+            "reason": "Point-scorer pick skipped once game is live/final."
+        }
 
     return {
         "sport": "nhl",
         "gameId": game["id"],
-        "date": game["date"],
+        "date": game_date,
         "startTimeUTC": game["startTimeUTC"],
         "venue": game["venue"],
         "awayCode": away,
@@ -552,7 +581,7 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
                 ),
             },
             {
-                "label": "Hot assist picks",
+                "label": "Point scorer picks",
                 "text": f"{away}: {away_player_pick['player']} | {home}: {home_player_pick['player']}.",
             },
         ],
