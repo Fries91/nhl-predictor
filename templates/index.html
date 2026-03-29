@@ -863,7 +863,7 @@
         const pred = derivePredictedScore(insight);
         const conf = Math.max(0, Math.min(100, Math.round(Number(insight.confidence || 0))));
         const extra = state.sport === 'nhl'
-          ? ('Hot assists: ' +
+          ? ('Point scorers: ' +
             ((((insight.playerPicks || {}).away || {}).player) || 'No data') +
             ' / ' +
             ((((insight.playerPicks || {}).home || {}).player) || 'No data'))
@@ -929,8 +929,8 @@
               (state.sport === 'nhl'
                 ? (
                     '<div class="chip">Likely point team: ' + esc(insight.likelyPointTeam) + '</div>' +
-                    '<div class="chip">' + esc((((insight.playerPicks || {}).away || {}).teamCode) || insight.awayCode) + ' assist pick: ' + esc((((insight.playerPicks || {}).away || {}).player) || 'No data') + '</div>' +
-                    '<div class="chip">' + esc((((insight.playerPicks || {}).home || {}).teamCode) || insight.homeCode) + ' assist pick: ' + esc((((insight.playerPicks || {}).home || {}).player) || 'No data') + '</div>'
+                    '<div class="chip">' + esc((((insight.playerPicks || {}).away || {}).teamCode) || insight.awayCode) + ' point scorer: ' + esc((((insight.playerPicks || {}).away || {}).player) || 'No data') + '</div>' +
+                    '<div class="chip">' + esc((((insight.playerPicks || {}).home || {}).teamCode) || insight.homeCode) + ' point scorer: ' + esc((((insight.playerPicks || {}).home || {}).player) || 'No data') + '</div>'
                   )
                 : '<div class="chip">Probable pitchers: ' + esc((((insight.probablePitchers || {}).away) || 'TBD') + ' vs ' + (((insight.probablePitchers || {}).home) || 'TBD')) + '</div>') +
             '</div>' +
@@ -939,18 +939,18 @@
               ? (
                   '<div class="mini-grid">' +
                     '<div class="mini">' +
-                      '<div class="label">' + esc(insight.awayCode) + ' hot assist pick</div>' +
+                      '<div class="label">' + esc(insight.awayCode) + ' point scorer</div>' +
                       '<div class="value" style="font-size:18px;">' + esc(((((insight.playerPicks || {}).away) || {}).player) || 'No data') + '</div>' +
                       '<div class="muted" style="margin-top:6px;">' +
-                        esc(((((insight.playerPicks || {}).away) || {}).assistsLast3) ?? 0) + ' assists in last ' +
+                        esc(((((insight.playerPicks || {}).away) || {}).pointsLast3) ?? 0) + ' points in last ' +
                         esc(((((insight.playerPicks || {}).away) || {}).gamesUsed) ?? 0) + ' games' +
                       '</div>' +
                     '</div>' +
                     '<div class="mini">' +
-                      '<div class="label">' + esc(insight.homeCode) + ' hot assist pick</div>' +
+                      '<div class="label">' + esc(insight.homeCode) + ' point scorer</div>' +
                       '<div class="value" style="font-size:18px;">' + esc(((((insight.playerPicks || {}).home) || {}).player) || 'No data') + '</div>' +
                       '<div class="muted" style="margin-top:6px;">' +
-                        esc(((((insight.playerPicks || {}).home) || {}).assistsLast3) ?? 0) + ' assists in last ' +
+                        esc(((((insight.playerPicks || {}).home) || {}).pointsLast3) ?? 0) + ' points in last ' +
                         esc(((((insight.playerPicks || {}).home) || {}).gamesUsed) ?? 0) + ' games' +
                       '</div>' +
                     '</div>' +
