@@ -21,7 +21,7 @@ PRED_TTL = 900
 ANALYZE_TTL = 3600
 
 session = requests.Session()
-session.headers.update({"User-Agent": "Game-Insights/3.0"})
+session.headers.update({"User-Agent": "Game-Insights/3.1"})
 
 _cache: dict[str, tuple[float, Any]] = {}
 
@@ -77,6 +77,12 @@ def safe_float(value: Any, default: float = 0.0) -> float:
         return default
 
 
+def safe_str(value: Any, default: str = "") -> str:
+    if value is None:
+        return default
+    return str(value)
+
+
 def logistic(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
@@ -103,7 +109,7 @@ def nhl_team_list() -> list[dict[str, str]]:
     items = []
     for abbr, row in rows.items():
         items.append({"code": abbr, "name": row.get("teamName", {}).get("default", abbr)})
-    return sorted(items, key=lambda x: x["name"])
+    return sorted(items, key=lambda x: safe_str(x["name"]))
 
 
 def nhl_parse_board_game(raw: dict[str, Any]) -> dict[str, Any]:
@@ -113,14 +119,14 @@ def nhl_parse_board_game(raw: dict[str, Any]) -> dict[str, Any]:
     return {
         "sport": "nhl",
         "id": raw.get("id"),
-        "date": raw.get("gameDate"),
-        "startTimeUTC": raw.get("startTimeUTC"),
-        "status": raw.get("gameState") or raw.get("gameScheduleState") or "PRE",
-        "venue": (raw.get("venue") or {}).get("default", ""),
-        "awayCode": away.get("abbrev"),
-        "homeCode": home.get("abbrev"),
-        "awayName": names.get(away.get("abbrev", ""), away.get("abbrev", "Away")),
-        "homeName": names.get(home.get("abbrev", ""), home.get("abbrev", "Home")),
+        "date": safe_str(raw.get("gameDate")),
+        "startTimeUTC": safe_str(raw.get("startTimeUTC")),
+        "status": safe_str(raw.get("gameState") or raw.get("gameScheduleState") or "PRE"),
+        "venue": safe_str((raw.get("venue") or {}).get("default", "")),
+        "awayCode": safe_str(away.get("abbrev")),
+        "homeCode": safe_str(home.get("abbrev")),
+        "awayName": names.get(safe_str(away.get("abbrev")), safe_str(away.get("abbrev"), "Away")),
+        "homeName": names.get(safe_str(home.get("abbrev")), safe_str(home.get("abbrev"), "Home")),
         "awayScore": int(away.get("score") or 0),
         "homeScore": int(home.get("score") or 0),
     }
@@ -136,7 +142,7 @@ def nhl_board() -> dict[str, Any]:
             games = [nhl_parse_board_game(g) for g in (day.get("games") or [])]
             break
 
-    games.sort(key=lambda g: g.get("startTimeUTC") or "")
+    games.sort(key=lambda g: safe_str(g.get("startTimeUTC")))
     return {
         "sport": "nhl",
         "updatedUTC": utc_now().isoformat(),
@@ -153,24 +159,24 @@ def nhl_schedule(team_code: str) -> list[dict[str, Any]]:
     for raw in data.get("games", []) or []:
         away = raw.get("awayTeam", {}) or {}
         home = raw.get("homeTeam", {}) or {}
-        away_code = away.get("abbrev")
-        home_code = home.get("abbrev")
+        away_code = safe_str(away.get("abbrev"))
+        home_code = safe_str(home.get("abbrev"))
         is_home = home_code == team_code
 
         team_score = int((home if is_home else away).get("score") or 0)
         opp_score = int((away if is_home else home).get("score") or 0)
         opp_code = away_code if is_home else home_code
-        status = raw.get("gameState") or raw.get("gameScheduleState") or "PRE"
+        status = safe_str(raw.get("gameState") or raw.get("gameScheduleState") or "PRE")
         ot = (raw.get("gameOutcome") or {}).get("lastPeriodType") in ("OT", "SO")
 
         games.append(
             {
-                "date": raw.get("gameDate"),
-                "startTimeUTC": raw.get("startTimeUTC"),
+                "date": safe_str(raw.get("gameDate")),
+                "startTimeUTC": safe_str(raw.get("startTimeUTC")),
                 "status": status,
                 "teamCode": team_code,
                 "opponentCode": opp_code,
-                "opponentName": names.get(opp_code or "", opp_code or "Opponent"),
+                "opponentName": names.get(opp_code, opp_code or "Opponent"),
                 "isHome": is_home,
                 "teamScore": team_score,
                 "opponentScore": opp_score,
@@ -181,12 +187,12 @@ def nhl_schedule(team_code: str) -> list[dict[str, Any]]:
             }
         )
 
-    return sorted(games, key=lambda x: (x.get("date") or "", x.get("startTimeUTC") or ""))
+    return sorted(games, key=lambda x: (safe_str(x.get("date")), safe_str(x.get("startTimeUTC"))))
 
 
 def nhl_recent_form(schedule: list[dict[str, Any]], n: int = 5) -> dict[str, float]:
     completed = [g for g in schedule if g["completed"]]
-    completed = sorted(completed, key=lambda g: g["date"], reverse=True)[:n]
+    completed = sorted(completed, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
     if not completed:
         return {"win_pct": 0.5, "avg_diff": 0.0, "gf": 3.0, "ga": 3.0}
     return {
@@ -199,7 +205,7 @@ def nhl_recent_form(schedule: list[dict[str, Any]], n: int = 5) -> dict[str, flo
 
 def nhl_split_form(schedule: list[dict[str, Any]], is_home: bool, n: int = 5) -> dict[str, float]:
     games = [g for g in schedule if g["completed"] and g["isHome"] == is_home]
-    games = sorted(games, key=lambda g: g["date"], reverse=True)[:n]
+    games = sorted(games, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
     if not games:
         return {"win_pct": 0.5, "avg_diff": 0.0}
     return {
@@ -210,7 +216,7 @@ def nhl_split_form(schedule: list[dict[str, Any]], is_home: bool, n: int = 5) ->
 
 def nhl_h2h(team_code: str, opp_code: str, schedule: list[dict[str, Any]], n: int = 4) -> dict[str, float]:
     games = [g for g in schedule if g["completed"] and g["opponentCode"] == opp_code]
-    games = sorted(games, key=lambda g: g["date"], reverse=True)[:n]
+    games = sorted(games, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
     if not games:
         return {"win_pct": 0.5, "avg_diff": 0.0}
     return {
@@ -220,10 +226,10 @@ def nhl_h2h(team_code: str, opp_code: str, schedule: list[dict[str, Any]], n: in
 
 
 def nhl_rest_days(schedule: list[dict[str, Any]], game_date: str) -> int:
-    prior = [g for g in schedule if g["completed"] and (g["date"] or "") < game_date]
+    prior = [g for g in schedule if g["completed"] and safe_str(g.get("date")) < safe_str(game_date)]
     if not prior:
         return 4
-    last_date = sorted(prior, key=lambda g: g["date"], reverse=True)[0]["date"]
+    last_date = sorted(prior, key=lambda g: safe_str(g.get("date")), reverse=True)[0]["date"]
     try:
         d1 = datetime.fromisoformat(last_date)
         d2 = datetime.fromisoformat(game_date)
@@ -373,7 +379,7 @@ def nhl_team_analyze(team_code: str) -> dict[str, Any]:
             }
         )
 
-    items.sort(key=lambda x: x["opponentName"])
+    items.sort(key=lambda x: safe_str(x["opponentName"]))
     return {
         "sport": "nhl",
         "teamCode": team_code,
@@ -402,7 +408,7 @@ def mlb_team_list() -> list[dict[str, str]]:
     teams = mlb_teams_map()
     return sorted(
         [{"code": v["code"], "name": v["name"]} for v in teams.values()],
-        key=lambda x: x["name"]
+        key=lambda x: safe_str(x["name"])
     )
 
 
@@ -449,25 +455,25 @@ def mlb_schedule_range(start_date: str, end_date: str) -> list[dict[str, Any]]:
                 {
                     "sport": "mlb",
                     "id": raw.get("gamePk"),
-                    "date": raw.get("officialDate"),
-                    "startTimeUTC": raw.get("gameDate"),
-                    "status": status.get("abstractGameState") or status.get("detailedState") or "Preview",
-                    "venue": (raw.get("venue") or {}).get("name", ""),
-                    "awayCode": away_team.get("abbreviation"),
-                    "homeCode": home_team.get("abbreviation"),
-                    "awayName": away_team.get("name"),
-                    "homeName": home_team.get("name"),
+                    "date": safe_str(raw.get("officialDate")),
+                    "startTimeUTC": safe_str(raw.get("gameDate")),
+                    "status": safe_str(status.get("abstractGameState") or status.get("detailedState") or "Preview"),
+                    "venue": safe_str((raw.get("venue") or {}).get("name", "")),
+                    "awayCode": safe_str(away_team.get("abbreviation")),
+                    "homeCode": safe_str(home_team.get("abbreviation")),
+                    "awayName": safe_str(away_team.get("name")),
+                    "homeName": safe_str(home_team.get("name")),
                     "awayScore": int(away.get("score") or 0),
                     "homeScore": int(home.get("score") or 0),
-                    "awayProbablePitcher": (away.get("probablePitcher") or {}).get("fullName"),
-                    "homeProbablePitcher": (home.get("probablePitcher") or {}).get("fullName"),
-                    "inningState": linescore.get("inningState"),
-                    "currentInning": linescore.get("currentInning"),
+                    "awayProbablePitcher": safe_str((away.get("probablePitcher") or {}).get("fullName")),
+                    "homeProbablePitcher": safe_str((home.get("probablePitcher") or {}).get("fullName")),
+                    "inningState": safe_str(linescore.get("inningState")),
+                    "currentInning": safe_str(linescore.get("currentInning")),
                     "completed": status.get("abstractGameState") == "Final",
                 }
             )
 
-    return sorted(games, key=lambda x: x.get("startTimeUTC") or "")
+    return sorted(games, key=lambda x: safe_str(x.get("startTimeUTC")))
 
 
 def mlb_board() -> dict[str, Any]:
@@ -500,17 +506,17 @@ def mlb_team_schedule(team_code: str) -> list[dict[str, Any]]:
             home = teams_raw.get("home", {}) or {}
             away_team = away.get("team", {}) or {}
             home_team = home.get("team", {}) or {}
-            is_home = home_team.get("abbreviation") == team_code
+            is_home = safe_str(home_team.get("abbreviation")) == team_code
             team_score = int((home if is_home else away).get("score") or 0)
             opp_score = int((away if is_home else home).get("score") or 0)
-            status = (raw.get("status") or {}).get("abstractGameState") or "Preview"
+            status = safe_str((raw.get("status") or {}).get("abstractGameState") or "Preview")
 
             games.append(
                 {
-                    "date": raw.get("officialDate"),
-                    "startTimeUTC": raw.get("gameDate"),
+                    "date": safe_str(raw.get("officialDate")),
+                    "startTimeUTC": safe_str(raw.get("gameDate")),
                     "teamCode": team_code,
-                    "opponentCode": away_team.get("abbreviation") if is_home else home_team.get("abbreviation"),
+                    "opponentCode": safe_str(away_team.get("abbreviation") if is_home else home_team.get("abbreviation")),
                     "isHome": is_home,
                     "teamScore": team_score,
                     "opponentScore": opp_score,
@@ -520,12 +526,12 @@ def mlb_team_schedule(team_code: str) -> list[dict[str, Any]]:
                 }
             )
 
-    return sorted(games, key=lambda x: (x.get("date") or "", x.get("startTimeUTC") or ""))
+    return sorted(games, key=lambda x: (safe_str(x.get("date")), safe_str(x.get("startTimeUTC"))))
 
 
 def mlb_recent_form(schedule: list[dict[str, Any]], n: int = 10) -> dict[str, float]:
     completed = [g for g in schedule if g["completed"]]
-    completed = sorted(completed, key=lambda g: g["date"], reverse=True)[:n]
+    completed = sorted(completed, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
     if not completed:
         return {"win_pct": 0.5, "avg_diff": 0.0, "rf": 4.5, "ra": 4.5}
     return {
@@ -538,7 +544,7 @@ def mlb_recent_form(schedule: list[dict[str, Any]], n: int = 10) -> dict[str, fl
 
 def mlb_split_form(schedule: list[dict[str, Any]], is_home: bool, n: int = 10) -> dict[str, float]:
     games = [g for g in schedule if g["completed"] and g["isHome"] == is_home]
-    games = sorted(games, key=lambda g: g["date"], reverse=True)[:n]
+    games = sorted(games, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
     if not games:
         return {"win_pct": 0.5, "avg_diff": 0.0}
     return {
@@ -549,7 +555,7 @@ def mlb_split_form(schedule: list[dict[str, Any]], is_home: bool, n: int = 10) -
 
 def mlb_h2h(team_code: str, opp_code: str, schedule: list[dict[str, Any]], n: int = 6) -> dict[str, float]:
     games = [g for g in schedule if g["completed"] and g["opponentCode"] == opp_code]
-    games = sorted(games, key=lambda g: g["date"], reverse=True)[:n]
+    games = sorted(games, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
     if not games:
         return {"win_pct": 0.5, "avg_diff": 0.0}
     return {
@@ -559,10 +565,10 @@ def mlb_h2h(team_code: str, opp_code: str, schedule: list[dict[str, Any]], n: in
 
 
 def mlb_rest_days(schedule: list[dict[str, Any]], game_date: str) -> int:
-    prior = [g for g in schedule if g["completed"] and (g["date"] or "") < game_date]
+    prior = [g for g in schedule if g["completed"] and safe_str(g.get("date")) < safe_str(game_date)]
     if not prior:
         return 1
-    last_date = sorted(prior, key=lambda g: g["date"], reverse=True)[0]["date"]
+    last_date = sorted(prior, key=lambda g: safe_str(g.get("date")), reverse=True)[0]["date"]
     try:
         d1 = datetime.fromisoformat(last_date)
         d2 = datetime.fromisoformat(game_date)
@@ -633,8 +639,8 @@ def mlb_predict_game(game: dict[str, Any]) -> dict[str, Any]:
         "confidence": confidence,
         "projectedTotal": round(projected_total, 1),
         "probablePitchers": {
-            "away": game.get("awayProbablePitcher"),
-            "home": game.get("homeProbablePitcher"),
+            "away": safe_str(game.get("awayProbablePitcher")),
+            "home": safe_str(game.get("homeProbablePitcher")),
         },
         "tier": tier,
         "lastPredictionRefreshUTC": utc_now().isoformat(),
@@ -703,7 +709,7 @@ def mlb_team_analyze(team_code: str) -> dict[str, Any]:
             }
         )
 
-    items.sort(key=lambda x: x["opponentName"])
+    items.sort(key=lambda x: safe_str(x["opponentName"]))
     return {
         "sport": "mlb",
         "teamCode": team_code,
