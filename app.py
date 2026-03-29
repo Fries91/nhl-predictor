@@ -503,28 +503,24 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     projected_total += ((home_split["gf"] + away_split["gf"]) - (home_split["ga"] + away_split["ga"])) * 0.05
     projected_total = max(4.5, min(8.5, projected_total))
 
-    if game.get("status") in {"PRE", "FUT"}:
-        away_player_pick = nhl_point_scorer_pick(away, last_n=2)
-        home_player_pick = nhl_point_scorer_pick(home, last_n=2)
-    else:
-        away_player_pick = {
-            "teamCode": away,
-            "player": "Pregame only",
-            "pointsLast3": 0,
-            "goalsLast3": 0,
-            "assistsLast3": 0,
-            "gamesUsed": 0,
-            "reason": "Point-scorer pick skipped once game is live/final."
-        }
-        home_player_pick = {
-            "teamCode": home,
-            "player": "Pregame only",
-            "pointsLast3": 0,
-            "goalsLast3": 0,
-            "assistsLast3": 0,
-            "gamesUsed": 0,
-            "reason": "Point-scorer pick skipped once game is live/final."
-        }
+    away_player_pick = {
+        "teamCode": away,
+        "player": "Loading soon",
+        "pointsLast3": 0,
+        "goalsLast3": 0,
+        "assistsLast3": 0,
+        "gamesUsed": 0,
+        "reason": "Skipped during initial insights load for faster page response."
+    }
+    home_player_pick = {
+        "teamCode": home,
+        "player": "Loading soon",
+        "pointsLast3": 0,
+        "goalsLast3": 0,
+        "assistsLast3": 0,
+        "gamesUsed": 0,
+        "reason": "Skipped during initial insights load for faster page response."
+    }
 
     return {
         "sport": "nhl",
