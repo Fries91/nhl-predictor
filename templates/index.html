@@ -1188,20 +1188,44 @@
         }
       }
 
-      async function ensureData(){
+      async function ensureBoardAndTeams(){
+        const tasks = [];
+
         if(!state.boards[state.sport]){
-          state.boards[state.sport] = await getJSON('/api/board/' + state.sport);
+          tasks.push(
+            getJSON('/api/board/' + state.sport).then(function(data){
+              state.boards[state.sport] = data;
+            })
+          );
         }
-        if(!state.insights[state.sport]){
-          state.insights[state.sport] = await getJSON('/api/insights/' + state.sport);
-        }
+
         if(!state.teams[state.sport]){
-          state.teams[state.sport] = await getJSON('/api/teams/' + state.sport);
+          tasks.push(
+            getJSON('/api/teams/' + state.sport).then(function(data){
+              state.teams[state.sport] = data;
+            })
+          );
         }
+
+        await Promise.all(tasks);
+
         if(!state.selectedAnalyzeTeamBySport[state.sport]){
           const list = ((state.teams[state.sport] || {}).teams || []);
           if(list[0]) state.selectedAnalyzeTeamBySport[state.sport] = list[0].code;
         }
+      }
+
+      function loadInsightsInBackground(){
+        getJSON('/api/insights/' + state.sport)
+          .then(function(data){
+            state.insights[state.sport] = data;
+            renderFeaturedPick();
+            if(state.tab === 'board') renderBoard();
+            if(state.tab === 'choices') renderChoices();
+          })
+          .catch(function(err){
+            showError('Predictions load failed: ' + err.message);
+          });
       }
 
       function renderTeamSelect(){
@@ -1216,16 +1240,23 @@
       async function fullRender(){
         try{
           showError('');
-          await ensureData();
           setTheme();
-          renderFeaturedPick();
           refreshTabButtons();
           switchTab(state.tab);
+
+          await ensureBoardAndTeams();
+
+          renderFeaturedPick();
           renderBoard();
           renderChoices();
           renderTeamSelect();
+
           if(state.tab === 'analyze'){
             await loadAnalyze(state.selectedAnalyzeTeamBySport[state.sport]);
+          }
+
+          if(!state.insights[state.sport]){
+            loadInsightsInBackground();
           }
         }catch(err){
           showError('Could not load data: ' + err.message);
@@ -1233,7 +1264,7 @@
       }
 
       document.querySelectorAll('.tab-btn').forEach(function(btn){
-        btn.addEventListener('click', async function(){
+        btn.addEventListener('click', function(){
           const tab = this.getAttribute('data-tab');
           if(tab === 'board'){
             state.tab = 'board';
@@ -1244,28 +1275,40 @@
           } else {
             state.tab = tab;
           }
-          await fullRender();
+          fullRender();
         });
       });
 
-      byId('teamSelect').addEventListener('change', async function(){
+      byId('teamSelect').addEventListener('change', function(){
         state.selectedAnalyzeTeamBySport[state.sport] = this.value;
-        await loadAnalyze(this.value);
+        loadAnalyze(this.value);
       });
 
       fullRender();
 
-      setInterval(async function(){
-        try{
-          state.boards[state.sport] = await getJSON('/api/board/' + state.sport);
-          state.insights[state.sport] = await getJSON('/api/insights/' + state.sport);
-          renderFeaturedPick();
-          if(state.tab === 'board'){
-            renderBoard();
-          } else if(state.tab === 'choices'){
-            renderChoices();
-          }
-        }catch(e){}
+      setInterval(function(){
+        getJSON('/api/board/' + state.sport)
+          .then(function(data){
+            state.boards[state.sport] = data;
+            if(state.tab === 'board'){
+              renderBoard();
+            } else if(state.tab === 'choices'){
+              renderChoices();
+            }
+          })
+          .catch(function(){});
+
+        getJSON('/api/insights/' + state.sport)
+          .then(function(data){
+            state.insights[state.sport] = data;
+            renderFeaturedPick();
+            if(state.tab === 'board'){
+              renderBoard();
+            } else if(state.tab === 'choices'){
+              renderChoices();
+            }
+          })
+          .catch(function(){});
       }, 900000);
     });
   </script>
