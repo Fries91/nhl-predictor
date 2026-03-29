@@ -16,6 +16,7 @@
       --green:#22c55e;
       --yellow:#facc15;
       --red:#ef4444;
+      --blue:#60a5fa;
       --shadow:0 18px 50px rgba(0,0,0,.28);
     }
     *{box-sizing:border-box}
@@ -40,8 +41,8 @@
         radial-gradient(circle at 50% 0%, rgba(96,165,250,.10), transparent 35%),
         linear-gradient(180deg,#0b1f10 0%, #102818 100%);
     }
-    .wrap{max-width:1280px;margin:0 auto;padding:16px}
-    .hero,.panel,.game-card,.detail-drop,.tab-btn,.day-btn,.reason-btn{
+    .wrap{max-width:1320px;margin:0 auto;padding:16px}
+    .hero,.panel,.game-card,.drop,.tab-btn,.reason-btn,.choice-btn,select{
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       backdrop-filter:blur(10px);
@@ -58,25 +59,25 @@
     .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.15)}
     .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.12)}
     h1{margin:0;text-align:center;font-size:30px}
-    h2,h3,h4{margin:0}
+    h2,h3{margin:0}
     .tabs{
       display:grid;
-      grid-template-columns:repeat(2,1fr);
+      grid-template-columns:repeat(4,1fr);
       gap:10px;
       margin-top:16px;
     }
-    .tab-btn,.day-btn{
+    .tab-btn{
       appearance:none;
       background:var(--panel-2);
       color:var(--text);
-      padding:12px 16px;
+      padding:12px 14px;
       border-radius:14px;
       cursor:pointer;
       font-weight:800;
       width:100%;
       text-align:center;
     }
-    .tab-btn.active,.day-btn.active{
+    .tab-btn.active{
       border-color:rgba(96,165,250,.55);
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
       background:linear-gradient(180deg, rgba(30,64,175,.45), rgba(15,23,42,.95));
@@ -85,6 +86,7 @@
       background:var(--panel);
       border-radius:20px;
       padding:16px;
+      margin-bottom:14px;
     }
     .section-head{
       display:flex;
@@ -94,12 +96,6 @@
       margin-bottom:14px;
     }
     .muted{color:var(--muted)}
-    .day-tabs{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-      margin-bottom:14px;
-    }
     .grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -112,7 +108,8 @@
       cursor:pointer;
       transition:transform .15s ease, border-color .15s ease;
     }
-    body.theme-mlb .game-card{
+    body.theme-mlb .game-card,
+    body.theme-mlb .drop{
       background:linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
     }
     .game-card:hover{transform:translateY(-2px)}
@@ -122,12 +119,7 @@
     }
     .teams-line{font-size:22px;font-weight:800;margin-bottom:8px}
     .score-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .score{
-      font-size:30px;
-      font-weight:900;
-      letter-spacing:.5px;
-      white-space:nowrap;
-    }
+    .score{font-size:30px;font-weight:900;letter-spacing:.5px;white-space:nowrap}
     .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .chip{
       border:1px solid var(--line);
@@ -137,28 +129,21 @@
       font-size:12px;
       color:var(--muted);
     }
-    .detail-drop{
+    .drop{
       margin-top:12px;
       background:linear-gradient(180deg, rgba(11,25,43,.95), rgba(8,18,31,.97));
       border-radius:18px;
       padding:16px;
-    }
-    body.theme-mlb .detail-drop{
-      background:linear-gradient(180deg, rgba(16,44,24,.95), rgba(9,25,15,.97));
+      border:1px solid var(--line);
     }
     .pick-badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      border-radius:999px;
-      padding:10px 14px;
-      font-weight:900;
-      font-size:16px;
+      display:inline-flex;align-items:center;gap:8px;
+      border-radius:999px;padding:10px 14px;font-weight:900;font-size:16px
     }
     .pick-green{background:rgba(34,197,94,.18);color:#bbf7d0;border:1px solid rgba(34,197,94,.38)}
     .pick-yellow{background:rgba(250,204,21,.18);color:#fde68a;border:1px solid rgba(250,204,21,.35)}
     .pick-red{background:rgba(239,68,68,.18);color:#fecaca;border:1px solid rgba(239,68,68,.35)}
-    .pick-grid{
+    .mini-grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:10px;
@@ -194,6 +179,119 @@
     }
     .reason-body{display:none;padding:0 14px 14px;color:var(--muted);line-height:1.45}
     .reason-item.open .reason-body{display:block}
+
+    .choice-list{display:grid;gap:12px}
+    .choice-row{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background:rgba(2,10,18,.28);
+    }
+    .choice-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .choice-picks{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+    .choice-btn{
+      appearance:none;
+      background:var(--panel-2);
+      color:var(--text);
+      padding:12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:800;
+      width:100%;
+      text-align:center;
+    }
+    .choice-btn.active{
+      border-color:rgba(96,165,250,.55);
+      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:800;
+      font-size:13px;
+      border:1px solid var(--line);
+    }
+    .status-green{background:rgba(34,197,94,.18);color:#bbf7d0}
+    .status-red{background:rgba(239,68,68,.18);color:#fecaca}
+    .status-yellow{background:rgba(250,204,21,.18);color:#fde68a}
+    .status-gray{background:rgba(148,163,184,.12);color:#cbd5e1}
+
+    .analyze-toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    select{
+      background:var(--panel-2);
+      color:var(--text);
+      padding:12px 14px;
+      border-radius:14px;
+      min-width:220px;
+    }
+    .table-wrap{
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:18px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:900px;
+    }
+    th,td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(148,163,184,.12);
+      text-align:left;
+      white-space:nowrap;
+    }
+    th{background:rgba(2,10,18,.35)}
+    .tag-green{color:#bbf7d0;font-weight:800}
+    .tag-red{color:#fecaca;font-weight:800}
+    .tag-yellow{color:#fde68a;font-weight:800}
+    .bar{
+      width:160px;
+      height:12px;
+      border-radius:999px;
+      background:rgba(148,163,184,.14);
+      overflow:hidden;
+      position:relative;
+    }
+    .bar-fill{
+      height:100%;
+      background:linear-gradient(90deg, rgba(34,197,94,.9), rgba(96,165,250,.9));
+    }
+    .spark{
+      display:flex;
+      gap:4px;
+      align-items:flex-end;
+      height:22px;
+    }
+    .spark span{
+      display:block;
+      width:10px;
+      border-radius:3px 3px 0 0;
+      background:#64748b;
+    }
+    .spark .win{background:#22c55e}
+    .spark .otw{background:#facc15}
+    .spark .otl{background:#f59e0b}
+    .spark .loss{background:#ef4444}
     .error{
       display:none;
       margin-top:12px;
@@ -210,8 +308,11 @@
       border:1px dashed var(--line);
       border-radius:18px;
     }
+    .hidden{display:none}
     @media (max-width: 980px){
-      .grid,.pick-grid{grid-template-columns:1fr}
+      .tabs{grid-template-columns:repeat(2,1fr)}
+      .grid,.mini-grid{grid-template-columns:1fr}
+      .choice-picks{grid-template-columns:1fr}
       h1{font-size:26px}
     }
   </style>
@@ -219,29 +320,51 @@
 <body class="theme-nhl">
   <div class="wrap">
     <div class="hero top-accent-nhl" id="hero">
-      <h1 id="titleText">🏒 NHL Game Insights</h1>
+      <h1 id="titleText">🏒 Game Insights</h1>
 
       <div class="tabs">
-        <button class="tab-btn active" data-sport="nhl">NHL</button>
-        <button class="tab-btn" data-sport="mlb">MLB</button>
+        <button class="tab-btn active" data-tab="board">NHL</button>
+        <button class="tab-btn" data-tab="mlb">MLB</button>
+        <button class="tab-btn" data-tab="choices">Choices</button>
+        <button class="tab-btn" data-tab="analyze">Team Analyze</button>
       </div>
 
       <div class="error" id="topError"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="boardPanel">
       <div class="section-head">
-        <strong>Next 2 days</strong>
+        <strong id="boardTitle">Today’s Games</strong>
         <span class="muted" id="boardHint">Loading...</span>
       </div>
+      <div id="boardArea" class="grid">
+        <div class="empty">Loading games...</div>
+      </div>
+    </div>
 
-      <div class="day-tabs">
-        <button class="day-btn active" data-day="0">Day 1</button>
-        <button class="day-btn" data-day="1">Day 2</button>
+    <div class="panel hidden" id="choicesPanel">
+      <div class="section-head">
+        <strong>Choices</strong>
+        <span class="muted">Pick today’s winners and track results</span>
+      </div>
+      <div id="choicesArea">
+        <div class="empty">Loading choices...</div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="analyzePanel">
+      <div class="section-head">
+        <strong>Team Analyze</strong>
+        <span class="muted">Spreadsheet and graph by opponent</span>
       </div>
 
-      <div id="boardArea" class="grid">
-        <div class="empty">Loading board...</div>
+      <div class="analyze-toolbar">
+        <label for="teamSelect" class="muted">Team</label>
+        <select id="teamSelect"></select>
+      </div>
+
+      <div id="analyzeArea">
+        <div class="empty">Choose a team to load matchup history.</div>
       </div>
     </div>
   </div>
@@ -250,10 +373,13 @@
     document.addEventListener('DOMContentLoaded', function () {
       const state = {
         sport: 'nhl',
-        dayIndex: 0,
+        tab: 'board',
         boards: { nhl: null, mlb: null },
         insights: { nhl: null, mlb: null },
-        selectedGameIdBySport: { nhl: null, mlb: null }
+        teams: { nhl: null, mlb: null },
+        analyze: { nhl: null, mlb: null },
+        selectedGameIdBySport: { nhl: null, mlb: null },
+        selectedAnalyzeTeamBySport: { nhl: null, mlb: null }
       };
 
       function byId(id){ return document.getElementById(id); }
@@ -266,11 +392,6 @@
         if(!v) return '-';
         const d = new Date(v);
         return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-      }
-      function shortDate(v){
-        if(!v) return '-';
-        const d = new Date(v + 'T12:00:00Z');
-        return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
       }
       function showError(msg){
         const box = byId('topError');
@@ -287,19 +408,56 @@
         }
         return data;
       }
+      function storageKey(){
+        return 'game_choices_' + state.sport;
+      }
+      function getSavedChoices(){
+        try{
+          return JSON.parse(localStorage.getItem(storageKey()) || '{}');
+        }catch(e){
+          return {};
+        }
+      }
+      function saveChoice(gameId, teamCode){
+        const data = getSavedChoices();
+        data[String(gameId)] = teamCode;
+        localStorage.setItem(storageKey(), JSON.stringify(data));
+      }
       function setTheme(){
         const sport = state.sport;
         document.body.className = sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
         byId('hero').className = 'hero ' + (sport === 'mlb' ? 'top-accent-mlb' : 'top-accent-nhl');
-        byId('titleText').textContent = sport === 'mlb' ? '⚾ MLB Game Insights' : '🏒 NHL Game Insights';
+        byId('titleText').textContent = sport === 'mlb' ? '⚾ Game Insights' : '🏒 Game Insights';
+        byId('boardTitle').textContent = sport === 'mlb' ? 'Today’s MLB Games' : 'Today’s NHL Games';
       }
-      function refreshButtons(){
+      function refreshTabButtons(){
         document.querySelectorAll('.tab-btn').forEach(function(btn){
-          btn.classList.toggle('active', btn.getAttribute('data-sport') === state.sport);
+          const tab = btn.getAttribute('data-tab');
+          const active =
+            (state.tab === 'board' && tab === 'board' && state.sport === 'nhl') ||
+            (state.tab === 'board' && tab === 'mlb' && state.sport === 'mlb') ||
+            state.tab === tab;
+          btn.classList.toggle('active', active);
         });
-        document.querySelectorAll('.day-btn').forEach(function(btn){
-          btn.classList.toggle('active', Number(btn.getAttribute('data-day')) === state.dayIndex);
-        });
+      }
+      function switchTab(tab){
+        if(tab === 'board'){
+          byId('boardPanel').classList.remove('hidden');
+          byId('choicesPanel').classList.add('hidden');
+          byId('analyzePanel').classList.add('hidden');
+        } else if(tab === 'choices'){
+          byId('boardPanel').classList.add('hidden');
+          byId('choicesPanel').classList.remove('hidden');
+          byId('analyzePanel').classList.add('hidden');
+        } else if(tab === 'analyze'){
+          byId('boardPanel').classList.add('hidden');
+          byId('choicesPanel').classList.add('hidden');
+          byId('analyzePanel').classList.remove('hidden');
+        }
+      }
+      function boardGames(){
+        const board = state.boards[state.sport];
+        return (((board || {}).days || [])[0] || {}).games || [];
       }
       function findInsight(gameId){
         const payload = state.insights[state.sport];
@@ -307,8 +465,8 @@
         return payload.insights.find(function(x){ return String(x.gameId) === String(gameId); }) || null;
       }
       function derivePredictedScore(insight){
-        const total = Number(insight && insight.projectedTotal || 0) || (state.sport === 'nhl' ? 6 : 9);
-        const homeProb = Number(insight && insight.homeWinProbability || 50);
+        const total = Number((insight && insight.projectedTotal) || (state.sport === 'nhl' ? 6 : 9));
+        const homeProb = Number((insight && insight.homeWinProbability) || 50);
         let margin = (homeProb - 50) / (state.sport === 'nhl' ? 11 : 8);
         const maxMargin = state.sport === 'nhl' ? 2.2 : 3.5;
         if (margin > maxMargin) margin = maxMargin;
@@ -326,11 +484,8 @@
         }
         return { away: awayScore, home: homeScore };
       }
-      function statusText(game){
-        return fmtDateTime(game.startTimeUTC);
-      }
       function pickBadgeHtml(insight){
-        if(insight.error){
+        if(!insight){
           return '<span class="pick-badge pick-red">Unavailable</span>';
         }
         if(insight.tier === 'tight'){
@@ -347,17 +502,13 @@
       }
       function detailDropHtml(insight){
         if(!insight){
-          return '<div class="detail-drop"><div class="empty">Could not build this insight right now.</div></div>';
+          return '<div class="drop"><div class="empty">Could not build this insight right now.</div></div>';
         }
-        if(insight.error){
-          return '<div class="detail-drop"><div class="empty">Could not build this insight right now.</div></div>';
-        }
-
-        const loserClass = insight.tier === 'tight' ? 'yellow' : 'red';
         const pred = derivePredictedScore(insight);
+        const loserClass = insight.tier === 'tight' ? 'yellow' : 'red';
 
         return '' +
-          '<div class="detail-drop">' +
+          '<div class="drop">' +
             '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
               '<div>' +
                 '<h3>' + esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) + '</h3>' +
@@ -366,7 +517,7 @@
               pickBadgeHtml(insight) +
             '</div>' +
 
-            '<div class="pick-grid">' +
+            '<div class="mini-grid">' +
               '<div class="mini"><div class="label">Predicted score</div><div class="value">' + esc(pred.away) + ' - ' + esc(pred.home) + '</div></div>' +
               '<div class="mini"><div class="label">Predicted winner</div><div class="value good">' + esc(insight.predictedWinner) + '</div></div>' +
               '<div class="mini"><div class="label">Predicted loser</div><div class="value ' + loserClass + '">' + esc(insight.predictedLoser) + '</div></div>' +
@@ -378,39 +529,29 @@
             '<div class="chip-row">' +
               (state.sport === 'nhl'
                 ? '<div class="chip">Likely point team: ' + esc(insight.likelyPointTeam) + '</div>'
-                : '<div class="chip">Probable pitchers: ' + esc((insight.probablePitchers.away || 'TBD') + ' vs ' + (insight.probablePitchers.home || 'TBD')) + '</div>') +
+                : '<div class="chip">Probable pitchers: ' + esc(((insight.probablePitchers || {}).away || 'TBD') + ' vs ' + (((insight.probablePitchers || {}).home || 'TBD'))) + '</div>') +
             '</div>' +
 
-            '<div class="reason-list">' +
-              (insight.reasons || []).map(reasonItem).join('') +
-            '</div>' +
+            '<div class="reason-list">' + (insight.reasons || []).map(reasonItem).join('') + '</div>' +
           '</div>';
       }
       function renderBoard(){
-        const board = state.boards[state.sport];
+        const games = boardGames();
         const host = byId('boardArea');
 
-        if(!board || !board.days || !board.days.length){
-          host.innerHTML = '<div class="empty">No games loaded.</div>';
-          byId('boardHint').textContent = 'No board';
-          return;
-        }
-
-        const day = board.days[state.dayIndex] || board.days[0];
-        const games = (day && day.games) || [];
-        byId('boardHint').textContent = (day.label || ('Day ' + (state.dayIndex + 1))) + ' • ' + shortDate(day.date);
-
         if(!games.length){
-          host.innerHTML = '<div class="empty">No games on this day.</div>';
+          host.innerHTML = '<div class="empty">No games loaded for today.</div>';
+          byId('boardHint').textContent = 'No games';
           return;
         }
 
-        const selectedId = state.selectedGameIdBySport[state.sport];
+        byId('boardHint').textContent = games.length + ' games today';
+
+        const openGameId = state.selectedGameIdBySport[state.sport];
         host.innerHTML = games.map(function(g){
           const insight = findInsight(g.id);
-          const pred = insight && !insight.error ? derivePredictedScore(insight) : null;
-          const active = String(g.id) === String(selectedId) ? ' active' : '';
-          const drop = String(g.id) === String(selectedId) ? detailDropHtml(insight) : '';
+          const pred = insight ? derivePredictedScore(insight) : null;
+          const active = String(g.id) === String(openGameId) ? ' active' : '';
           return '' +
             '<div class="game-card' + active + '" data-game-id="' + esc(g.id) + '">' +
               '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
@@ -423,17 +564,18 @@
               '</div>' +
               '<div class="chip-row">' +
                 '<div class="chip">Predicted score</div>' +
-                '<div class="chip">' + esc(statusText(g)) + '</div>' +
+                '<div class="chip">' + esc(fmtDateTime(g.startTimeUTC)) + '</div>' +
                 '<div class="chip">' + esc(g.venue || '') + '</div>' +
               '</div>' +
-              drop +
+              (String(g.id) === String(openGameId) ? detailDropHtml(insight) : '') +
             '</div>';
         }).join('');
 
         host.querySelectorAll('[data-game-id]').forEach(function(el){
           el.addEventListener('click', function(){
             const gameId = this.getAttribute('data-game-id');
-            state.selectedGameIdBySport[state.sport] = String(gameId) === String(state.selectedGameIdBySport[state.sport]) ? null : gameId;
+            state.selectedGameIdBySport[state.sport] =
+              String(state.selectedGameIdBySport[state.sport]) === String(gameId) ? null : gameId;
             renderBoard();
           });
         });
@@ -448,49 +590,215 @@
           }
         });
       }
-      async function ensureData(sport){
-        if(!state.boards[sport]){
-          state.boards[sport] = await getJSON('/api/board/' + sport);
+      function choiceStatus(game, pickedCode){
+        const finalish = state.sport === 'nhl'
+          ? game.status === 'OFF'
+          : (String(game.status).toLowerCase().indexOf('final') !== -1);
+
+        const previewish = state.sport === 'nhl'
+          ? (game.status === 'PRE' || game.status === 'FUT')
+          : (String(game.status).toLowerCase().indexOf('preview') !== -1 || String(game.status).toLowerCase().indexOf('scheduled') !== -1);
+
+        const awayLeading = Number(game.awayScore) > Number(game.homeScore);
+        const homeLeading = Number(game.homeScore) > Number(game.awayScore);
+        const winningCode = awayLeading ? game.awayCode : homeLeading ? game.homeCode : null;
+
+        if(!pickedCode){
+          return { cls:'status-gray', text:'No choice saved' };
         }
-        if(!state.insights[sport]){
-          state.insights[sport] = await getJSON('/api/insights/' + sport);
+        if(previewish){
+          return { cls:'status-gray', text:'Currently not playing' };
+        }
+        if(finalish){
+          if(!winningCode){
+            return { cls:'status-yellow', text:'Final • tied result feed' };
+          }
+          return {
+            cls: pickedCode === winningCode ? 'status-green' : 'status-red',
+            text: pickedCode === winningCode ? 'Won choice' : 'Lost choice'
+          };
+        }
+        if(!winningCode){
+          return { cls:'status-yellow', text:'Live • tied ' + game.awayScore + '-' + game.homeScore };
+        }
+        return {
+          cls: pickedCode === winningCode ? 'status-green' : 'status-red',
+          text: 'Live • ' + game.awayScore + '-' + game.homeScore
+        };
+      }
+      function renderChoices(){
+        const games = boardGames();
+        const saved = getSavedChoices();
+        const host = byId('choicesArea');
+
+        if(!games.length){
+          host.innerHTML = '<div class="empty">No games available for today.</div>';
+          return;
+        }
+
+        host.innerHTML = '<div class="choice-list">' + games.map(function(g){
+          const savedPick = saved[String(g.id)] || '';
+          const status = choiceStatus(g, savedPick);
+          return '' +
+            '<div class="choice-row">' +
+              '<div class="choice-head">' +
+                '<div>' +
+                  '<div><strong>' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</strong></div>' +
+                  '<div class="muted">' + esc(fmtDateTime(g.startTimeUTC)) + ' • ' + esc(g.venue || '') + '</div>' +
+                '</div>' +
+                '<span class="status-pill ' + esc(status.cls) + '">' + esc(status.text) + '</span>' +
+              '</div>' +
+              '<div class="muted">Live/final score: ' + esc(g.awayScore) + ' - ' + esc(g.homeScore) + '</div>' +
+              '<div class="choice-picks">' +
+                '<button class="choice-btn ' + (savedPick === g.awayCode ? 'active' : '') + '" data-pick-game="' + esc(g.id) + '" data-pick-team="' + esc(g.awayCode) + '">' + esc(g.awayName) + '</button>' +
+                '<button class="choice-btn ' + (savedPick === g.homeCode ? 'active' : '') + '" data-pick-game="' + esc(g.id) + '" data-pick-team="' + esc(g.homeCode) + '">' + esc(g.homeName) + '</button>' +
+              '</div>' +
+            '</div>';
+        }).join('') + '</div>';
+
+        host.querySelectorAll('[data-pick-game]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            saveChoice(this.getAttribute('data-pick-game'), this.getAttribute('data-pick-team'));
+            renderChoices();
+          });
+        });
+      }
+      function renderAnalyzeTable(payload){
+        const rows = payload.rows || [];
+        if(!rows.length){
+          return '<div class="empty">No completed matchup data found yet.</div>';
+        }
+
+        return '' +
+          '<div class="table-wrap">' +
+            '<table>' +
+              '<thead>' +
+                '<tr>' +
+                  '<th>Opponent</th>' +
+                  '<th>GP</th>' +
+                  '<th>W</th>' +
+                  '<th>L</th>' +
+                  '<th>OTW</th>' +
+                  '<th>OTL</th>' +
+                  '<th>GF</th>' +
+                  '<th>GA</th>' +
+                  '<th>GD</th>' +
+                  '<th>Graph</th>' +
+                  '<th>Recent</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>' +
+                rows.map(function(r){
+                  const width = Math.max(4, Math.round((Number(r.scorePct) || 0) * 100));
+                  const trend = (r.trend || []).map(function(v){
+                    let cls = 'loss';
+                    let h = 8;
+                    if(v === 1){ cls = 'win'; h = 22; }
+                    else if(v === 0.5){ cls = 'otw'; h = 18; }
+                    else if(v === -0.5){ cls = 'otl'; h = 12; }
+                    return '<span class="' + cls + '" style="height:' + h + 'px"></span>';
+                  }).join('');
+                  return '' +
+                    '<tr>' +
+                      '<td><strong>' + esc(r.opponentCode) + '</strong> <span class="muted">' + esc(r.opponentName) + '</span></td>' +
+                      '<td>' + esc(r.games) + '</td>' +
+                      '<td class="tag-green">' + esc(r.wins) + '</td>' +
+                      '<td class="tag-red">' + esc(r.losses) + '</td>' +
+                      '<td class="tag-yellow">' + esc(r.otWins) + '</td>' +
+                      '<td class="tag-yellow">' + esc(r.otLosses) + '</td>' +
+                      '<td>' + esc(r.gf) + '</td>' +
+                      '<td>' + esc(r.ga) + '</td>' +
+                      '<td class="' + ((Number(r.goalDiff) >= 0) ? 'tag-green' : 'tag-red') + '">' + esc(r.goalDiff) + '</td>' +
+                      '<td><div class="bar"><div class="bar-fill" style="width:' + width + '%"></div></div></td>' +
+                      '<td><div class="spark">' + trend + '</div></td>' +
+                    '</tr>';
+                }).join('') +
+              '</tbody>' +
+            '</table>' +
+          '</div>';
+      }
+      async function loadAnalyze(teamCode){
+        if(!teamCode) return;
+        byId('analyzeArea').innerHTML = '<div class="empty">Loading matchup history...</div>';
+        const payload = await getJSON('/api/team-analyze/' + state.sport + '/' + encodeURIComponent(teamCode));
+        state.analyze[state.sport] = payload;
+        byId('analyzeArea').innerHTML =
+          '<div class="muted" style="margin-bottom:12px;"><strong>' + esc(payload.teamName) + '</strong> season matchup sheet</div>' +
+          renderAnalyzeTable(payload);
+      }
+      async function ensureData(){
+        if(!state.boards[state.sport]){
+          state.boards[state.sport] = await getJSON('/api/board/' + state.sport);
+        }
+        if(!state.insights[state.sport]){
+          state.insights[state.sport] = await getJSON('/api/insights/' + state.sport);
+        }
+        if(!state.teams[state.sport]){
+          state.teams[state.sport] = await getJSON('/api/teams/' + state.sport);
+        }
+        if(!state.selectedAnalyzeTeamBySport[state.sport]){
+          const list = ((state.teams[state.sport] || {}).teams || []);
+          if(list[0]) state.selectedAnalyzeTeamBySport[state.sport] = list[0].code;
         }
       }
-      async function fullReload(){
+      function renderTeamSelect(){
+        const teams = ((state.teams[state.sport] || {}).teams || []);
+        const sel = byId('teamSelect');
+        const selected = state.selectedAnalyzeTeamBySport[state.sport] || '';
+        sel.innerHTML = teams.map(function(t){
+          return '<option value="' + esc(t.code) + '"' + (t.code === selected ? ' selected' : '') + '>' + esc(t.name) + ' (' + esc(t.code) + ')</option>';
+        }).join('');
+      }
+      async function fullRender(){
         try{
           showError('');
-          await ensureData(state.sport);
+          await ensureData();
           setTheme();
-          refreshButtons();
+          refreshTabButtons();
+          switchTab(state.tab);
           renderBoard();
+          renderChoices();
+          renderTeamSelect();
+          if(state.tab === 'analyze'){
+            await loadAnalyze(state.selectedAnalyzeTeamBySport[state.sport]);
+          }
         }catch(err){
           showError('Could not load data: ' + err.message);
-          byId('boardArea').innerHTML = '<div class="empty">Could not load board.</div>';
         }
       }
 
       document.querySelectorAll('.tab-btn').forEach(function(btn){
         btn.addEventListener('click', async function(){
-          state.sport = this.getAttribute('data-sport');
-          await fullReload();
+          const tab = this.getAttribute('data-tab');
+          if(tab === 'board'){
+            state.tab = 'board';
+            state.sport = 'nhl';
+          } else if(tab === 'mlb'){
+            state.tab = 'board';
+            state.sport = 'mlb';
+          } else {
+            state.tab = tab;
+          }
+          await fullRender();
         });
       });
 
-      document.querySelectorAll('.day-btn').forEach(function(btn){
-        btn.addEventListener('click', function(){
-          state.dayIndex = Number(this.getAttribute('data-day')) || 0;
-          refreshButtons();
-          renderBoard();
-        });
+      byId('teamSelect').addEventListener('change', async function(){
+        state.selectedAnalyzeTeamBySport[state.sport] = this.value;
+        await loadAnalyze(this.value);
       });
 
-      fullReload();
+      fullRender();
 
       setInterval(async function(){
         try{
           state.boards[state.sport] = await getJSON('/api/board/' + state.sport);
           state.insights[state.sport] = await getJSON('/api/insights/' + state.sport);
-          renderBoard();
+          if(state.tab === 'board'){
+            renderBoard();
+          } else if(state.tab === 'choices'){
+            renderChoices();
+          }
         }catch(e){}
       }, 900000);
     });
