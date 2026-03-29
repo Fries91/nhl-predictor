@@ -18,10 +18,6 @@
       --yellow:#facc15;
       --red:#ef4444;
       --blue:#60a5fa;
-      --ice1:#d7f0ff;
-      --ice2:#9fd7ff;
-      --field1:#1e4d2b;
-      --field2:#2f7d32;
       --shadow:0 18px 50px rgba(0,0,0,.28);
     }
     *{box-sizing:border-box}
@@ -55,109 +51,154 @@
     .hero{
       border-radius:22px;
       padding:18px;
-      background:
-        linear-gradient(180deg, rgba(8,20,34,.92), rgba(6,16,29,.92));
-      margin-bottom:16px;
+      background:linear-gradient(180deg, rgba(8,20,34,.92), rgba(6,16,29,.92));
+      margin-bottom:14px;
       position:sticky;
       top:0;
       z-index:5;
     }
     .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.15)}
     .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.12)}
-    h1{margin:0;font-size:30px}
+    h1{margin:0;text-align:center;font-size:30px}
     h2,h3,h4{margin:0}
-    .sub{margin-top:8px;color:var(--muted);line-height:1.45}
-    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .tabs{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:16px;
+    }
     .tab-btn,.day-btn{
-      appearance:none;background:var(--panel-2);color:var(--text);padding:12px 16px;
-      border-radius:14px;cursor:pointer;font-weight:800
+      appearance:none;
+      background:var(--panel-2);
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:800;
+      width:100%;
+      text-align:center;
     }
     .tab-btn.active,.day-btn.active{
       border-color:rgba(96,165,250,.55);
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
       background:linear-gradient(180deg, rgba(30,64,175,.45), rgba(15,23,42,.95));
     }
-    .meta-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
-    .stat{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
-    }
-    .stat .label{color:var(--muted);font-size:12px}
-    .stat .value{font-size:23px;font-weight:800;margin-top:6px}
     .panel{background:var(--panel);border-radius:20px;padding:16px}
-    .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+    }
     .muted{color:var(--muted)}
-    .day-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .day-tabs{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-bottom:14px;
+    }
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
     .game-card{
-      background:
-        linear-gradient(180deg, rgba(15,30,50,.95), rgba(8,19,35,.98));
+      background:linear-gradient(180deg, rgba(15,30,50,.95), rgba(8,19,35,.98));
       border-radius:20px;
       padding:14px;
       cursor:pointer;
       transition:transform .15s ease, border-color .15s ease;
     }
     body.theme-mlb .game-card{
-      background:
-        linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
+      background:linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
     }
     .game-card:hover{transform:translateY(-2px)}
-    .game-card.active{border-color:rgba(96,165,250,.6);box-shadow:0 0 0 1px rgba(96,165,250,.55) inset}
+    .game-card.active{
+      border-color:rgba(96,165,250,.6);
+      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
+    }
     .teams-line{font-size:22px;font-weight:800;margin-bottom:8px}
     .score-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .score{
-      font-size:28px;font-weight:900;letter-spacing:.5px
-    }
+    .score{font-size:28px;font-weight:900;letter-spacing:.5px}
     .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .chip{
       border:1px solid var(--line);
       background:rgba(2,10,18,.62);
-      border-radius:999px;padding:7px 10px;font-size:12px;color:var(--muted)
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      color:var(--muted);
     }
     .insight-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
     .insight-card{
       background:linear-gradient(180deg, rgba(11,25,43,.95), rgba(8,18,31,.97));
-      border-radius:20px;padding:16px
+      border-radius:20px;
+      padding:16px;
     }
     body.theme-mlb .insight-card{
       background:linear-gradient(180deg, rgba(16,44,24,.95), rgba(9,25,15,.97));
     }
     .pick-badge{
-      display:inline-flex;align-items:center;gap:8px;
-      border-radius:999px;padding:10px 14px;font-weight:900;font-size:16px
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:900;
+      font-size:16px;
     }
     .pick-green{background:rgba(34,197,94,.18);color:#bbf7d0;border:1px solid rgba(34,197,94,.38)}
     .pick-yellow{background:rgba(250,204,21,.18);color:#fde68a;border:1px solid rgba(250,204,21,.35)}
     .pick-red{background:rgba(239,68,68,.18);color:#fecaca;border:1px solid rgba(239,68,68,.35)}
     .pick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
     .mini{
-      border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(2,10,18,.38)
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(2,10,18,.38);
     }
     .mini .label{color:var(--muted);font-size:12px}
     .mini .value{font-size:20px;font-weight:800;margin-top:6px}
+    .good{color:#bbf7d0}
+    .yellow{color:#fde68a}
+    .red{color:#fecaca}
     .reason-list{display:grid;gap:10px}
     .reason-item{
-      border:1px solid var(--line);border-radius:16px;background:rgba(2,10,18,.34);overflow:hidden
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(2,10,18,.34);
+      overflow:hidden;
     }
     .reason-btn{
-      width:100%;text-align:left;background:transparent;color:var(--text);
-      border:0;padding:13px 14px;cursor:pointer;font-weight:800
+      width:100%;
+      text-align:left;
+      background:transparent;
+      color:var(--text);
+      border:0;
+      padding:13px 14px;
+      cursor:pointer;
+      font-weight:800;
     }
     .reason-body{display:none;padding:0 14px 14px;color:var(--muted);line-height:1.45}
     .reason-item.open .reason-body{display:block}
     .error{
-      display:none;margin-top:12px;padding:12px 14px;border-radius:14px;
-      border:1px solid rgba(239,68,68,.38);background:rgba(127,29,29,.25);color:#fecaca
+      display:none;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(239,68,68,.38);
+      background:rgba(127,29,29,.25);
+      color:#fecaca;
     }
     .empty{
-      padding:40px 14px;text-align:center;color:var(--muted);
-      border:1px dashed var(--line);border-radius:18px
+      padding:40px 14px;
+      text-align:center;
+      color:var(--muted);
+      border:1px dashed var(--line);
+      border-radius:18px;
     }
     @media (max-width: 980px){
-      .meta-row,.grid,.insight-layout,.pick-grid{grid-template-columns:1fr}
+      .grid,.insight-layout,.pick-grid{grid-template-columns:1fr}
       h1{font-size:26px}
+      .tabs{grid-template-columns:1fr}
+      .day-tabs{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -165,21 +206,11 @@
   <div class="wrap">
     <div class="hero top-accent-nhl" id="hero">
       <h1 id="titleText">🏒 NHL Game Insights</h1>
-      <div class="sub" id="subtitleText">
-        Day 1 and Day 2 game boards, live scores, and matchup insights. Scores refresh every 5 minutes, predictions every 15 minutes, and the 2-day board every 8 hours.
-      </div>
 
       <div class="tabs">
         <button class="tab-btn active" data-sport="nhl">NHL</button>
         <button class="tab-btn" data-sport="mlb">MLB</button>
         <button class="tab-btn" data-sport="insights">Game Insights</button>
-      </div>
-
-      <div class="meta-row">
-        <div class="stat"><div class="label">Current sport</div><div class="value" id="metaSport">NHL</div></div>
-        <div class="stat"><div class="label">Games shown</div><div class="value" id="metaGames">-</div></div>
-        <div class="stat"><div class="label">Scores refresh</div><div class="value" id="metaScores">5m</div></div>
-        <div class="stat"><div class="label">Predictions refresh</div><div class="value" id="metaPreds">15m</div></div>
       </div>
 
       <div class="error" id="topError"></div>
@@ -258,9 +289,7 @@
         const sport = activeSport();
         document.body.className = sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
         byId('hero').className = 'hero ' + (sport === 'mlb' ? 'top-accent-mlb' : 'top-accent-nhl');
-        byId('metaSport').textContent = sport.toUpperCase();
         byId('titleText').textContent = sport === 'mlb' ? '⚾ MLB Game Insights' : '🏒 NHL Game Insights';
-        byId('subtitleText').textContent = 'Day 1 and Day 2 game boards, live scores, and matchup insights. Scores refresh every 5 minutes, predictions every 15 minutes, and the 2-day board every 8 hours.';
       }
       function refreshTabButtons(){
         document.querySelectorAll('.tab-btn').forEach(function(btn){
@@ -286,15 +315,11 @@
         if(!board || !board.days || !board.days.length){
           host.innerHTML = '<div class="empty">No games loaded.</div>';
           byId('boardHint').textContent = 'No board';
-          byId('metaGames').textContent = '-';
           return;
         }
         const day = board.days[state.dayIndex] || board.days[0];
         const games = (day && day.games) || [];
         byId('boardHint').textContent = (day.label || ('Day ' + (state.dayIndex + 1))) + ' • ' + shortDate(day.date);
-        byId('metaGames').textContent = String(games.length);
-        byId('metaScores').textContent = Math.round((board.refreshWindows?.scoresSeconds || 300) / 60) + 'm';
-        byId('metaPreds').textContent = Math.round((board.refreshWindows?.predictionsSeconds || 900) / 60) + 'm';
 
         if(!games.length){
           host.innerHTML = '<div class="empty">No games on this day.</div>';
@@ -378,7 +403,7 @@
           return;
         }
 
-        const loserClass = insight.tier === 'tight' ? 'pick-yellow' : 'pick-red';
+        const loserClass = insight.tier === 'tight' ? 'yellow' : 'red';
         host.innerHTML = '' +
           '<div class="insight-layout">' +
             '<div class="insight-card">' +
@@ -392,7 +417,7 @@
 
               '<div class="pick-grid">' +
                 '<div class="mini"><div class="label">Predicted winner</div><div class="value good">' + esc(insight.predictedWinner) + '</div></div>' +
-                '<div class="mini"><div class="label">Predicted loser</div><div class="value ' + loserClass.replace('pick-','') + '">' + esc(insight.predictedLoser) + '</div></div>' +
+                '<div class="mini"><div class="label">Predicted loser</div><div class="value ' + loserClass + '">' + esc(insight.predictedLoser) + '</div></div>' +
                 '<div class="mini"><div class="label">Live score</div><div class="value">' + esc(insight.live.awayScore) + ' - ' + esc(insight.live.homeScore) + '</div></div>' +
                 '<div class="mini"><div class="label">Game state</div><div class="value" style="font-size:18px;">' + esc(insight.live.status || '-') + '</div></div>' +
                 '<div class="mini"><div class="label">Confidence</div><div class="value">' + esc(insight.confidence) + '%</div></div>' +
@@ -433,19 +458,6 @@
           const first = (((state.boards[sport] || {}).days || [])[0] || {}).games || [];
           if(first[0]) state.selectedGameIdBySport[sport] = first[0].id;
         }
-      }
-      async function refreshScoresAndPredictions(){
-        const sports = ['nhl','mlb'];
-        for(const sport of sports){
-          if(state.boards[sport]){
-            try { state.boards[sport] = await getJSON('/api/board/' + sport); } catch(e){}
-          }
-          if(state.insights[sport]){
-            try { state.insights[sport] = await getJSON('/api/insights/' + sport); } catch(e){}
-          }
-        }
-        renderBoard();
-        renderDetail();
       }
       async function fullReload(){
         try{
