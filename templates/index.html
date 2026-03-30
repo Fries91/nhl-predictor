@@ -8,18 +8,18 @@
   <meta name="apple-mobile-web-app-title" content="Game Insights">
   <style>
     :root{
-      --panel:rgba(7,17,31,.88);
-      --panel-2:rgba(12,28,48,.94);
-      --line:rgba(148,163,184,.18);
+      --panel:rgba(8,19,33,.78);
+      --panel-2:rgba(13,30,50,.88);
+      --line:rgba(191,230,255,.18);
       --text:#edf2f7;
-      --muted:#93a4ba;
+      --muted:#a9b9cc;
       --green:#22c55e;
       --yellow:#facc15;
       --red:#ef4444;
       --blue:#60a5fa;
-      --ice:#bfe6ff;
-      --grass:#86efac;
-      --shadow:0 18px 50px rgba(0,0,0,.30);
+      --ice:#d7f0ff;
+      --grass:#a7f3d0;
+      --shadow:0 18px 50px rgba(0,0,0,.24);
     }
 
     *{box-sizing:border-box}
@@ -30,10 +30,10 @@
       color:var(--text);
       min-height:100vh;
       background:
-        radial-gradient(circle at 50% -10%, rgba(191,230,255,.22), transparent 38%),
-        radial-gradient(circle at 15% 10%, rgba(125,211,252,.14), transparent 28%),
-        radial-gradient(circle at 85% 8%, rgba(96,165,250,.12), transparent 24%),
-        linear-gradient(180deg,#02101b 0%, #072036 45%, #091a2b 100%);
+        radial-gradient(circle at 50% -10%, rgba(191,230,255,.34), transparent 40%),
+        radial-gradient(circle at 16% 10%, rgba(125,211,252,.20), transparent 30%),
+        radial-gradient(circle at 84% 9%, rgba(96,165,250,.17), transparent 28%),
+        linear-gradient(180deg,#072038 0%, #0a2a46 42%, #0b243b 100%);
       background-attachment:fixed;
       position:relative;
       overflow-x:hidden;
@@ -50,41 +50,41 @@
 
     body.theme-nhl::before{
       background:
-        linear-gradient(90deg, transparent 8%, rgba(255,255,255,.05) 8.3%, transparent 8.6%, transparent 49.6%, rgba(239,68,68,.18) 50%, transparent 50.4%, transparent 91.4%, rgba(255,255,255,.05) 91.7%, transparent 92%),
-        linear-gradient(180deg, transparent 14%, rgba(255,255,255,.04) 14.2%, transparent 14.4%, transparent 85.6%, rgba(255,255,255,.04) 85.8%, transparent 86%);
+        linear-gradient(90deg, transparent 8%, rgba(255,255,255,.08) 8.3%, transparent 8.6%, transparent 49.6%, rgba(239,68,68,.18) 50%, transparent 50.4%, transparent 91.4%, rgba(255,255,255,.08) 91.7%, transparent 92%),
+        linear-gradient(180deg, transparent 14%, rgba(255,255,255,.06) 14.2%, transparent 14.4%, transparent 85.6%, rgba(255,255,255,.06) 85.8%, transparent 86%);
       opacity:.75;
     }
 
     body.theme-nhl::after{
       background:
-        radial-gradient(circle at 50% 46%, rgba(255,255,255,.08), transparent 12%),
-        radial-gradient(circle at 50% 46%, rgba(191,230,255,.07), transparent 26%),
-        linear-gradient(180deg, rgba(255,255,255,.04), transparent 18%);
+        radial-gradient(circle at 50% 46%, rgba(255,255,255,.10), transparent 12%),
+        radial-gradient(circle at 50% 46%, rgba(191,230,255,.09), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,.06), transparent 18%);
       mix-blend-mode:screen;
-      opacity:.7;
+      opacity:.65;
     }
 
     body.theme-mlb{
       background:
-        radial-gradient(circle at 50% -10%, rgba(134,239,172,.16), transparent 38%),
-        radial-gradient(circle at 12% 8%, rgba(34,197,94,.10), transparent 28%),
-        radial-gradient(circle at 88% 10%, rgba(96,165,250,.08), transparent 26%),
-        linear-gradient(180deg,#08140b 0%, #0d2915 42%, #122014 100%);
+        radial-gradient(circle at 50% -10%, rgba(134,239,172,.22), transparent 38%),
+        radial-gradient(circle at 12% 8%, rgba(34,197,94,.14), transparent 28%),
+        radial-gradient(circle at 88% 10%, rgba(96,165,250,.10), transparent 26%),
+        linear-gradient(180deg,#0a1a0f 0%, #10311b 42%, #112617 100%);
     }
 
     body.theme-mlb::before{
       background:
-        radial-gradient(circle at 50% 100%, rgba(120,113,108,.16), transparent 34%),
-        linear-gradient(180deg, transparent 62%, rgba(120,113,108,.11) 72%, rgba(120,113,108,.14) 100%);
-      opacity:.8;
+        radial-gradient(circle at 50% 100%, rgba(120,113,108,.18), transparent 34%),
+        linear-gradient(180deg, transparent 62%, rgba(120,113,108,.12) 72%, rgba(120,113,108,.15) 100%);
+      opacity:.82;
     }
 
     body.theme-mlb::after{
       background:
-        radial-gradient(circle at 50% 78%, rgba(255,255,255,.10), transparent 1.4%),
-        conic-gradient(from 225deg at 50% 78%, transparent 0deg 43deg, rgba(255,255,255,.12) 43deg 47deg, transparent 47deg 313deg, rgba(255,255,255,.12) 313deg 317deg, transparent 317deg 360deg),
+        radial-gradient(circle at 50% 78%, rgba(255,255,255,.11), transparent 1.4%),
+        conic-gradient(from 225deg at 50% 78%, transparent 0deg 43deg, rgba(255,255,255,.13) 43deg 47deg, transparent 47deg 313deg, rgba(255,255,255,.13) 313deg 317deg, transparent 317deg 360deg),
         radial-gradient(circle at 50% 78%, rgba(34,197,94,.08), transparent 22%);
-      opacity:.5;
+      opacity:.56;
     }
 
     .wrap{
@@ -95,17 +95,17 @@
       z-index:1;
     }
 
-    .hero,.panel,.game-card,.drop,.tab-btn,.reason-btn,.choice-btn,select{
+    .hero,.panel,.game-card,.drop,.tab-btn,.reason-btn,.choice-btn,.day-btn,select{
       border:1px solid var(--line);
       box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
     }
 
     .hero{
       border-radius:22px;
       padding:18px;
-      background:linear-gradient(180deg, rgba(8,20,34,.92), rgba(6,16,29,.92));
+      background:linear-gradient(180deg, rgba(9,23,39,.84), rgba(8,20,34,.84));
       margin-bottom:14px;
       position:sticky;
       top:0;
@@ -121,14 +121,14 @@
       pointer-events:none;
     }
 
-    .hero::before{opacity:.18}
+    .hero::before{opacity:.16}
     .hero::after{opacity:.12}
 
     body.theme-nhl .hero::before{
       background:
-        radial-gradient(circle at 50% 55%, rgba(191,230,255,.28), transparent 14%),
-        radial-gradient(circle at 50% 55%, rgba(255,255,255,.12), transparent 24%),
-        linear-gradient(90deg, transparent 9%, rgba(255,255,255,.08) 9.2%, transparent 9.4%, transparent 49.7%, rgba(239,68,68,.22) 50%, transparent 50.3%, transparent 90.6%, rgba(255,255,255,.08) 90.8%, transparent 91%);
+        radial-gradient(circle at 50% 55%, rgba(191,230,255,.30), transparent 14%),
+        radial-gradient(circle at 50% 55%, rgba(255,255,255,.13), transparent 24%),
+        linear-gradient(90deg, transparent 9%, rgba(255,255,255,.08) 9.2%, transparent 9.4%, transparent 49.7%, rgba(239,68,68,.16) 50%, transparent 50.3%, transparent 90.6%, rgba(255,255,255,.08) 90.8%, transparent 91%);
     }
 
     body.theme-nhl .hero::after{
@@ -139,15 +139,15 @@
       background:
         radial-gradient(circle at 50% 82%, rgba(255,255,255,.18), transparent 2.2%),
         conic-gradient(from 225deg at 50% 82%, transparent 0deg 43deg, rgba(255,255,255,.16) 43deg 47deg, transparent 47deg 313deg, rgba(255,255,255,.16) 313deg 317deg, transparent 317deg 360deg),
-        radial-gradient(circle at 50% 100%, rgba(120,113,108,.18), transparent 38%);
+        radial-gradient(circle at 50% 100%, rgba(120,113,108,.16), transparent 38%);
     }
 
     body.theme-mlb .hero::after{
-      background:linear-gradient(180deg, rgba(255,255,255,.05), transparent 34%);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 34%);
     }
 
-    .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.20)}
-    .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.18)}
+    .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.18)}
+    .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.16)}
 
     h1{
       margin:0;
@@ -156,6 +156,7 @@
       letter-spacing:.4px;
       position:relative;
       z-index:1;
+      text-shadow:0 2px 16px rgba(0,0,0,.18);
     }
 
     .tabs{
@@ -169,7 +170,7 @@
 
     .tab-btn{
       appearance:none;
-      background:var(--panel-2);
+      background:rgba(12,28,48,.72);
       color:var(--text);
       padding:12px 14px;
       border-radius:14px;
@@ -182,27 +183,52 @@
     .tab-btn.active{
       border-color:rgba(96,165,250,.55);
       box-shadow:0 0 0 1px rgba(96,165,250,.55) inset;
-      background:linear-gradient(180deg, rgba(30,64,175,.45), rgba(15,23,42,.95));
+      background:linear-gradient(180deg, rgba(30,64,175,.38), rgba(15,23,42,.80));
     }
 
     body.theme-mlb .tab-btn.active{
       border-color:rgba(34,197,94,.46);
       box-shadow:0 0 0 1px rgba(34,197,94,.42) inset;
-      background:linear-gradient(180deg, rgba(22,101,52,.42), rgba(15,23,42,.95));
+      background:linear-gradient(180deg, rgba(22,101,52,.36), rgba(15,23,42,.82));
+    }
+
+    .day-tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    .day-btn{
+      appearance:none;
+      background:rgba(12,28,48,.70);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:800;
+    }
+
+    .day-btn.active{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 1px rgba(250,204,21,.32) inset;
+      color:#fde68a;
     }
 
     .featured-pick{
       border:1px solid var(--line);
       border-radius:18px;
       padding:14px 16px;
-      background:linear-gradient(180deg, rgba(9,23,40,.88), rgba(7,17,31,.96));
+      background:linear-gradient(180deg, rgba(10,25,43,.78), rgba(7,17,31,.84));
       box-shadow:var(--shadow);
       position:relative;
       z-index:1;
     }
 
     body.theme-mlb .featured-pick{
-      background:linear-gradient(180deg, rgba(14,36,20,.88), rgba(9,22,14,.96));
+      background:linear-gradient(180deg, rgba(14,36,20,.80), rgba(9,22,14,.86));
     }
 
     .featured-top{
@@ -249,7 +275,7 @@
     }
 
     .panel{
-      background:var(--panel);
+      background:linear-gradient(180deg, rgba(8,19,33,.76), rgba(8,19,33,.70));
       border-radius:20px;
       padding:16px;
       margin-bottom:14px;
@@ -278,7 +304,7 @@
     }
 
     .game-card{
-      background:linear-gradient(180deg, rgba(15,30,50,.95), rgba(8,19,35,.98));
+      background:linear-gradient(180deg, rgba(15,30,50,.84), rgba(8,19,35,.90));
       border-radius:20px;
       padding:14px;
       cursor:pointer;
@@ -286,17 +312,17 @@
 
     body.theme-mlb .game-card,
     body.theme-mlb .drop{
-      background:linear-gradient(180deg, rgba(18,50,28,.95), rgba(10,30,16,.98));
+      background:linear-gradient(180deg, rgba(18,50,28,.84), rgba(10,30,16,.90));
     }
 
     .game-card.active{
       border-color:rgba(96,165,250,.6);
-      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset, 0 16px 40px rgba(0,0,0,.22);
+      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset, 0 16px 40px rgba(0,0,0,.18);
     }
 
     .game-card.top-game{
       border-color:rgba(250,204,21,.42);
-      box-shadow:0 0 0 1px rgba(250,204,21,.22) inset, 0 18px 44px rgba(0,0,0,.24);
+      box-shadow:0 0 0 1px rgba(250,204,21,.22) inset, 0 18px 44px rgba(0,0,0,.20);
     }
 
     .game-topline{
@@ -350,7 +376,7 @@
 
     .chip{
       border:1px solid var(--line);
-      background:rgba(2,10,18,.62);
+      background:rgba(2,10,18,.42);
       border-radius:999px;
       padding:7px 10px;
       font-size:12px;
@@ -399,7 +425,7 @@
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
-      background:rgba(2,10,18,.38);
+      background:rgba(2,10,18,.26);
     }
 
     .mini .label{color:var(--muted);font-size:12px}
@@ -417,7 +443,7 @@
     .reason-item{
       border:1px solid var(--line);
       border-radius:16px;
-      background:rgba(2,10,18,.34);
+      background:rgba(2,10,18,.24);
       overflow:hidden;
     }
 
@@ -447,7 +473,7 @@
       border:1px solid var(--line);
       border-radius:18px;
       padding:14px;
-      background:rgba(2,10,18,.28);
+      background:rgba(2,10,18,.22);
     }
 
     .choice-head{
@@ -468,7 +494,7 @@
 
     .choice-btn{
       appearance:none;
-      background:var(--panel-2);
+      background:rgba(12,28,48,.72);
       color:var(--text);
       padding:12px;
       border-radius:14px;
@@ -509,7 +535,7 @@
     }
 
     select{
-      background:var(--panel-2);
+      background:rgba(12,28,48,.72);
       color:var(--text);
       padding:12px 14px;
       border-radius:14px;
@@ -538,7 +564,7 @@
       white-space:nowrap;
     }
 
-    th{background:rgba(2,10,18,.35)}
+    th{background:rgba(2,10,18,.28)}
     .tag-green{color:#bbf7d0;font-weight:800}
     .tag-red{color:#fecaca;font-weight:800}
     .tag-yellow{color:#fde68a;font-weight:800}
@@ -586,7 +612,7 @@
       padding:12px 14px;
       border-radius:14px;
       border:1px solid rgba(239,68,68,.38);
-      background:rgba(127,29,29,.25);
+      background:rgba(127,29,29,.22);
       color:#fecaca;
       position:relative;
       z-index:1;
@@ -626,13 +652,15 @@
         <button class="tab-btn" data-tab="analyze">Team Analyze</button>
       </div>
 
+      <div class="day-tabs" id="dayTabs"></div>
+
       <div class="error" id="topError"></div>
       <div id="featuredPick" class="hidden" style="margin-top:12px;"></div>
     </div>
 
     <div class="panel" id="boardPanel">
       <div class="section-head">
-        <strong id="boardTitle">Today’s Games</strong>
+        <strong id="boardTitle">Games</strong>
         <span class="muted" id="boardHint">Loading...</span>
       </div>
       <div id="boardArea" class="grid">
@@ -677,7 +705,8 @@
         teams: { nhl: null, mlb: null },
         analyze: { nhl: null, mlb: null },
         selectedGameIdBySport: { nhl: null, mlb: null },
-        selectedAnalyzeTeamBySport: { nhl: null, mlb: null }
+        selectedAnalyzeTeamBySport: { nhl: null, mlb: null },
+        selectedDayIndexBySport: { nhl: 0, mlb: 0 }
       };
 
       function byId(id){ return document.getElementById(id); }
@@ -741,7 +770,7 @@
         document.body.className = sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
         byId('hero').className = 'hero ' + (sport === 'mlb' ? 'top-accent-mlb' : 'top-accent-nhl');
         byId('titleText').textContent = sport === 'mlb' ? '⚾ Game Insights' : '🏒 Game Insights';
-        byId('boardTitle').textContent = sport === 'mlb' ? 'Today’s MLB Games' : 'Today’s NHL Games';
+        byId('boardTitle').textContent = sport === 'mlb' ? 'MLB Games' : 'NHL Games';
       }
 
       function refreshTabButtons(){
@@ -771,6 +800,57 @@
         }
       }
 
+      function boardPayload(){
+        return state.boards[state.sport];
+      }
+
+      function boardDays(){
+        const payload = boardPayload();
+        const days = (payload && payload.days) || [];
+        return Array.isArray(days) ? days : [];
+      }
+
+      function selectedDayIndex(){
+        const days = boardDays();
+        let idx = Number(state.selectedDayIndexBySport[state.sport] || 0);
+        if(idx < 0) idx = 0;
+        if(idx >= days.length) idx = 0;
+        state.selectedDayIndexBySport[state.sport] = idx;
+        return idx;
+      }
+
+      function currentBoardDay(){
+        const days = boardDays();
+        if(!days.length) return null;
+        return days[selectedDayIndex()] || days[0] || null;
+      }
+
+      function renderDayTabs(){
+        const host = byId('dayTabs');
+        const days = boardDays();
+
+        if(state.tab !== 'board' || !days.length){
+          host.innerHTML = '';
+          return;
+        }
+
+        host.innerHTML = days.map(function(day, idx){
+          const label = day.label || (idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : ('Day ' + (idx + 1)));
+          const active = idx === selectedDayIndex() ? ' active' : '';
+          return '<button type="button" class="day-btn' + active + '" data-day-index="' + idx + '">' + esc(label) + '</button>';
+        }).join('');
+
+        host.querySelectorAll('[data-day-index]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            state.selectedDayIndexBySport[state.sport] = Number(this.getAttribute('data-day-index'));
+            state.selectedGameIdBySport[state.sport] = null;
+            renderDayTabs();
+            renderFeaturedPick();
+            renderBoard();
+          });
+        });
+      }
+
       function findInsight(gameId){
         const payload = state.insights[state.sport];
         if(!payload || !payload.insights) return null;
@@ -779,9 +859,14 @@
         }) || null;
       }
 
+      function currentDayGames(){
+        const day = currentBoardDay();
+        return ((day && day.games) || []).slice();
+      }
+
       function getTopInsight(){
-        const payload = state.insights[state.sport];
-        const list = (payload && payload.insights) || [];
+        const games = currentDayGames();
+        const list = games.map(function(g){ return findInsight(g.id); }).filter(Boolean);
         if(!list.length) return null;
         return list.slice().sort(function(a,b){
           return Number(b.confidence || 0) - Number(a.confidence || 0);
@@ -789,8 +874,7 @@
       }
 
       function boardGames(){
-        const board = state.boards[state.sport];
-        const games = ((((board || {}).days || [])[0] || {}).games || []).slice();
+        const games = currentDayGames();
         return games.sort(function(a,b){
           const ia = findInsight(a.id);
           const ib = findInsight(b.id);
@@ -850,6 +934,11 @@
         return Number((insight || {}).confidence || 0) >= 24 ? 'chip chip-strong' : 'chip chip-tight';
       }
 
+      function playerPickText(insight, side){
+        const pick = (((insight || {}).playerPicks || {})[side]) || {};
+        return pick.player || 'No player pick yet';
+      }
+
       function renderFeaturedPick(){
         const host = byId('featuredPick');
         const insight = getTopInsight();
@@ -863,10 +952,7 @@
         const pred = derivePredictedScore(insight);
         const conf = Math.max(0, Math.min(100, Math.round(Number(insight.confidence || 0))));
         const extra = state.sport === 'nhl'
-          ? ('Point scorers: ' +
-            ((((insight.playerPicks || {}).away || {}).player) || 'No data') +
-            ' / ' +
-            ((((insight.playerPicks || {}).home || {}).player) || 'No data'))
+          ? ('Player picks: ' + playerPickText(insight, 'away') + ' / ' + playerPickText(insight, 'home'))
           : ('Probable pitchers: ' +
             ((((insight.probablePitchers || {}).away) || 'TBD')) +
             ' vs ' +
@@ -877,7 +963,7 @@
           '<div class="featured-pick">' +
             '<div class="featured-top">' +
               '<div>' +
-                '<div class="featured-title">Best ' + esc(state.sport.toUpperCase()) + ' pick today</div>' +
+                '<div class="featured-title">Best ' + esc(state.sport.toUpperCase()) + ' pick in this tab</div>' +
                 '<div class="featured-main">' + esc(insight.predictedWinner) + ' over ' + esc(insight.predictedLoser) + '</div>' +
                 '<div class="featured-sub">' +
                   esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) +
@@ -929,8 +1015,8 @@
               (state.sport === 'nhl'
                 ? (
                     '<div class="chip">Likely point team: ' + esc(insight.likelyPointTeam) + '</div>' +
-                    '<div class="chip">' + esc((((insight.playerPicks || {}).away || {}).teamCode) || insight.awayCode) + ' point scorer: ' + esc((((insight.playerPicks || {}).away || {}).player) || 'No data') + '</div>' +
-                    '<div class="chip">' + esc((((insight.playerPicks || {}).home || {}).teamCode) || insight.homeCode) + ' point scorer: ' + esc((((insight.playerPicks || {}).home || {}).player) || 'No data') + '</div>'
+                    '<div class="chip">' + esc(insight.awayCode) + ' player pick: ' + esc(playerPickText(insight, 'away')) + '</div>' +
+                    '<div class="chip">' + esc(insight.homeCode) + ' player pick: ' + esc(playerPickText(insight, 'home')) + '</div>'
                   )
                 : '<div class="chip">Probable pitchers: ' + esc((((insight.probablePitchers || {}).away) || 'TBD') + ' vs ' + (((insight.probablePitchers || {}).home) || 'TBD')) + '</div>') +
             '</div>' +
@@ -939,20 +1025,14 @@
               ? (
                   '<div class="mini-grid">' +
                     '<div class="mini">' +
-                      '<div class="label">' + esc(insight.awayCode) + ' point scorer</div>' +
-                      '<div class="value" style="font-size:18px;">' + esc(((((insight.playerPicks || {}).away) || {}).player) || 'No data') + '</div>' +
-                      '<div class="muted" style="margin-top:6px;">' +
-                        esc(((((insight.playerPicks || {}).away) || {}).pointsLast3) ?? 0) + ' points in last ' +
-                        esc(((((insight.playerPicks || {}).away) || {}).gamesUsed) ?? 0) + ' games' +
-                      '</div>' +
+                      '<div class="label">' + esc(insight.awayCode) + ' player pick for a point</div>' +
+                      '<div class="value" style="font-size:18px;">' + esc(playerPickText(insight, 'away')) + '</div>' +
+                      '<div class="muted" style="margin-top:6px;">Any point this game</div>' +
                     '</div>' +
                     '<div class="mini">' +
-                      '<div class="label">' + esc(insight.homeCode) + ' point scorer</div>' +
-                      '<div class="value" style="font-size:18px;">' + esc(((((insight.playerPicks || {}).home) || {}).player) || 'No data') + '</div>' +
-                      '<div class="muted" style="margin-top:6px;">' +
-                        esc(((((insight.playerPicks || {}).home) || {}).pointsLast3) ?? 0) + ' points in last ' +
-                        esc(((((insight.playerPicks || {}).home) || {}).gamesUsed) ?? 0) + ' games' +
-                      '</div>' +
+                      '<div class="label">' + esc(insight.homeCode) + ' player pick for a point</div>' +
+                      '<div class="value" style="font-size:18px;">' + esc(playerPickText(insight, 'home')) + '</div>' +
+                      '<div class="muted" style="margin-top:6px;">Any point this game</div>' +
                     '</div>' +
                   '</div>'
                 )
@@ -964,15 +1044,16 @@
 
       function renderBoard(){
         const games = boardGames();
+        const day = currentBoardDay();
         const host = byId('boardArea');
 
         if(!games.length){
-          host.innerHTML = '<div class="empty">No games loaded for today.</div>';
+          host.innerHTML = '<div class="empty">No games loaded for this day.</div>';
           byId('boardHint').textContent = 'No games';
           return;
         }
 
-        byId('boardHint').textContent = games.length + ' games today';
+        byId('boardHint').textContent = (day && day.label ? day.label + ' • ' : '') + games.length + ' games';
 
         const openGameId = state.selectedGameIdBySport[state.sport];
         host.innerHTML = games.map(function(g, idx){
@@ -1002,8 +1083,8 @@
                 '<div class="chip">' + esc(g.venue || '') + '</div>' +
                 (state.sport === 'nhl'
                   ? (
-                      '<div class="chip">' + esc(g.awayCode) + ': ' + esc(((((insight || {}).playerPicks || {}).away || {}).player) || 'No data') + '</div>' +
-                      '<div class="chip">' + esc(g.homeCode) + ': ' + esc(((((insight || {}).playerPicks || {}).home || {}).player) || 'No data') + '</div>'
+                      '<div class="chip">' + esc(g.awayCode) + ' player pick: ' + esc(playerPickText(insight, 'away')) + '</div>' +
+                      '<div class="chip">' + esc(g.homeCode) + ' player pick: ' + esc(playerPickText(insight, 'home')) + '</div>'
                     )
                   : (
                       '<div class="chip">Pitchers: ' + esc(((((insight || {}).probablePitchers || {}).away) || 'TBD') + ' vs ' + ((((insight || {}).probablePitchers || {}).home) || 'TBD')) + '</div>'
@@ -1077,7 +1158,7 @@
         const host = byId('choicesArea');
 
         if(!games.length){
-          host.innerHTML = '<div class="empty">No games available for today.</div>';
+          host.innerHTML = '<div class="empty">No games available for this day.</div>';
           return;
         }
 
@@ -1246,6 +1327,7 @@
 
           await ensureBoardAndTeams();
 
+          renderDayTabs();
           renderFeaturedPick();
           renderBoard();
           renderChoices();
@@ -1275,6 +1357,7 @@
           } else {
             state.tab = tab;
           }
+          state.selectedGameIdBySport[state.sport] = null;
           fullRender();
         });
       });
@@ -1290,7 +1373,9 @@
         getJSON('/api/board/' + state.sport)
           .then(function(data){
             state.boards[state.sport] = data;
+            renderDayTabs();
             if(state.tab === 'board'){
+              renderFeaturedPick();
               renderBoard();
             } else if(state.tab === 'choices'){
               renderChoices();
