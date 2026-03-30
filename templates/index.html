@@ -17,8 +17,6 @@
       --yellow:#facc15;
       --red:#ef4444;
       --blue:#60a5fa;
-      --ice:#d7f0ff;
-      --grass:#a7f3d0;
       --shadow:0 18px 50px rgba(0,0,0,.24);
     }
 
@@ -35,33 +33,7 @@
         radial-gradient(circle at 84% 9%, rgba(96,165,250,.17), transparent 28%),
         linear-gradient(180deg,#072038 0%, #0a2a46 42%, #0b243b 100%);
       background-attachment:fixed;
-      position:relative;
       overflow-x:hidden;
-    }
-
-    body::before,
-    body::after{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      z-index:0;
-    }
-
-    body.theme-nhl::before{
-      background:
-        linear-gradient(90deg, transparent 8%, rgba(255,255,255,.08) 8.3%, transparent 8.6%, transparent 49.6%, rgba(239,68,68,.18) 50%, transparent 50.4%, transparent 91.4%, rgba(255,255,255,.08) 91.7%, transparent 92%),
-        linear-gradient(180deg, transparent 14%, rgba(255,255,255,.06) 14.2%, transparent 14.4%, transparent 85.6%, rgba(255,255,255,.06) 85.8%, transparent 86%);
-      opacity:.75;
-    }
-
-    body.theme-nhl::after{
-      background:
-        radial-gradient(circle at 50% 46%, rgba(255,255,255,.10), transparent 12%),
-        radial-gradient(circle at 50% 46%, rgba(191,230,255,.09), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.06), transparent 18%);
-      mix-blend-mode:screen;
-      opacity:.65;
     }
 
     body.theme-mlb{
@@ -72,30 +44,13 @@
         linear-gradient(180deg,#0a1a0f 0%, #10311b 42%, #112617 100%);
     }
 
-    body.theme-mlb::before{
-      background:
-        radial-gradient(circle at 50% 100%, rgba(120,113,108,.18), transparent 34%),
-        linear-gradient(180deg, transparent 62%, rgba(120,113,108,.12) 72%, rgba(120,113,108,.15) 100%);
-      opacity:.82;
-    }
-
-    body.theme-mlb::after{
-      background:
-        radial-gradient(circle at 50% 78%, rgba(255,255,255,.11), transparent 1.4%),
-        conic-gradient(from 225deg at 50% 78%, transparent 0deg 43deg, rgba(255,255,255,.13) 43deg 47deg, transparent 47deg 313deg, rgba(255,255,255,.13) 313deg 317deg, transparent 317deg 360deg),
-        radial-gradient(circle at 50% 78%, rgba(34,197,94,.08), transparent 22%);
-      opacity:.56;
-    }
-
     .wrap{
       max-width:1320px;
       margin:0 auto;
       padding:16px;
-      position:relative;
-      z-index:1;
     }
 
-    .hero,.panel,.game-card,.drop,.tab-btn,.reason-btn,.choice-btn,.day-btn,select{
+    .hero,.panel,.game-card,.choice-row,.tab-btn,.day-btn,.choice-btn,select{
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       backdrop-filter:blur(8px);
@@ -110,53 +65,13 @@
       position:sticky;
       top:0;
       z-index:5;
-      overflow:hidden;
     }
-
-    .hero::before,
-    .hero::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-    }
-
-    .hero::before{opacity:.16}
-    .hero::after{opacity:.12}
-
-    body.theme-nhl .hero::before{
-      background:
-        radial-gradient(circle at 50% 55%, rgba(191,230,255,.30), transparent 14%),
-        radial-gradient(circle at 50% 55%, rgba(255,255,255,.13), transparent 24%),
-        linear-gradient(90deg, transparent 9%, rgba(255,255,255,.08) 9.2%, transparent 9.4%, transparent 49.7%, rgba(239,68,68,.16) 50%, transparent 50.3%, transparent 90.6%, rgba(255,255,255,.08) 90.8%, transparent 91%);
-    }
-
-    body.theme-nhl .hero::after{
-      background:linear-gradient(180deg, rgba(255,255,255,.08), transparent 34%);
-    }
-
-    body.theme-mlb .hero::before{
-      background:
-        radial-gradient(circle at 50% 82%, rgba(255,255,255,.18), transparent 2.2%),
-        conic-gradient(from 225deg at 50% 82%, transparent 0deg 43deg, rgba(255,255,255,.16) 43deg 47deg, transparent 47deg 313deg, rgba(255,255,255,.16) 313deg 317deg, transparent 317deg 360deg),
-        radial-gradient(circle at 50% 100%, rgba(120,113,108,.16), transparent 38%);
-    }
-
-    body.theme-mlb .hero::after{
-      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 34%);
-    }
-
-    .hero.top-accent-nhl{box-shadow:0 18px 50px rgba(96,165,250,.18)}
-    .hero.top-accent-mlb{box-shadow:0 18px 50px rgba(34,197,94,.16)}
 
     h1{
       margin:0;
       text-align:center;
       font-size:30px;
       letter-spacing:.4px;
-      position:relative;
-      z-index:1;
-      text-shadow:0 2px 16px rgba(0,0,0,.18);
     }
 
     .tabs{
@@ -164,8 +79,6 @@
       grid-template-columns:repeat(4,1fr);
       gap:10px;
       margin-top:16px;
-      position:relative;
-      z-index:1;
     }
 
     .tab-btn{
@@ -197,8 +110,6 @@
       gap:10px;
       flex-wrap:wrap;
       margin-top:12px;
-      position:relative;
-      z-index:1;
     }
 
     .day-btn{
@@ -217,70 +128,11 @@
       color:#fde68a;
     }
 
-    .featured-pick{
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px 16px;
-      background:linear-gradient(180deg, rgba(10,25,43,.78), rgba(7,17,31,.84));
-      box-shadow:var(--shadow);
-      position:relative;
-      z-index:1;
-    }
-
-    body.theme-mlb .featured-pick{
-      background:linear-gradient(180deg, rgba(14,36,20,.80), rgba(9,22,14,.86));
-    }
-
-    .featured-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-
-    .featured-title{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:1px;
-      color:var(--muted);
-      font-weight:800;
-    }
-
-    .featured-main{
-      font-size:22px;
-      font-weight:900;
-      margin-top:4px;
-    }
-
-    .featured-sub{
-      color:var(--muted);
-      margin-top:6px;
-      font-size:13px;
-      line-height:1.4;
-    }
-
-    .conf-meter{
-      width:160px;
-      height:12px;
-      border-radius:999px;
-      background:rgba(148,163,184,.14);
-      overflow:hidden;
-      border:1px solid rgba(148,163,184,.14);
-    }
-
-    .conf-fill{
-      height:100%;
-      background:linear-gradient(90deg, rgba(250,204,21,.92), rgba(34,197,94,.92));
-    }
-
     .panel{
       background:linear-gradient(180deg, rgba(8,19,33,.76), rgba(8,19,33,.70));
       border-radius:20px;
       padding:16px;
       margin-bottom:14px;
-      position:relative;
-      overflow:hidden;
     }
 
     .section-head{
@@ -289,8 +141,6 @@
       align-items:center;
       gap:12px;
       margin-bottom:14px;
-      position:relative;
-      z-index:1;
     }
 
     .muted{color:var(--muted)}
@@ -299,52 +149,20 @@
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:14px;
-      position:relative;
-      z-index:1;
     }
 
     .game-card{
       background:linear-gradient(180deg, rgba(15,30,50,.84), rgba(8,19,35,.90));
       border-radius:20px;
       padding:14px;
-      cursor:pointer;
     }
 
-    body.theme-mlb .game-card,
-    body.theme-mlb .drop{
+    body.theme-mlb .game-card{
       background:linear-gradient(180deg, rgba(18,50,28,.84), rgba(10,30,16,.90));
-    }
-
-    .game-card.active{
-      border-color:rgba(96,165,250,.6);
-      box-shadow:0 0 0 1px rgba(96,165,250,.55) inset, 0 16px 40px rgba(0,0,0,.18);
     }
 
     .game-card.top-game{
       border-color:rgba(250,204,21,.42);
-      box-shadow:0 0 0 1px rgba(250,204,21,.22) inset, 0 18px 44px rgba(0,0,0,.20);
-    }
-
-    .game-topline{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:6px;
-    }
-
-    .game-rank{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(250,204,21,.14);
-      border:1px solid rgba(250,204,21,.28);
-      color:#fde68a;
-      font-size:12px;
-      font-weight:800;
     }
 
     .teams-line{
@@ -363,7 +181,6 @@
     .score{
       font-size:30px;
       font-weight:900;
-      letter-spacing:.5px;
       white-space:nowrap;
     }
 
@@ -393,84 +210,9 @@
       border-color:rgba(250,204,21,.35);
     }
 
-    .drop{
-      margin-top:12px;
-      border-radius:18px;
-      padding:16px;
-      border:1px solid var(--line);
-    }
-
-    .pick-badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      border-radius:999px;
-      padding:10px 14px;
-      font-weight:900;
-      font-size:16px;
-    }
-
-    .pick-green{background:rgba(34,197,94,.18);color:#bbf7d0;border:1px solid rgba(34,197,94,.38)}
-    .pick-yellow{background:rgba(250,204,21,.18);color:#fde68a;border:1px solid rgba(250,204,21,.35)}
-    .pick-red{background:rgba(239,68,68,.18);color:#fecaca;border:1px solid rgba(239,68,68,.35)}
-
-    .mini-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
-      margin-top:12px;
-    }
-
-    .mini{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      background:rgba(2,10,18,.26);
-    }
-
-    .mini .label{color:var(--muted);font-size:12px}
-    .mini .value{font-size:20px;font-weight:800;margin-top:6px}
-    .good{color:#bbf7d0}
-    .yellow{color:#fde68a}
-    .red{color:#fecaca}
-
-    .reason-list{
-      display:grid;
-      gap:10px;
-      margin-top:12px;
-    }
-
-    .reason-item{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:rgba(2,10,18,.24);
-      overflow:hidden;
-    }
-
-    .reason-btn{
-      width:100%;
-      text-align:left;
-      background:transparent;
-      color:var(--text);
-      border:0;
-      padding:13px 14px;
-      cursor:pointer;
-      font-weight:800;
-    }
-
-    .reason-body{
-      display:none;
-      padding:0 14px 14px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
-    .reason-item.open .reason-body{display:block}
-
     .choice-list{display:grid;gap:12px}
 
     .choice-row{
-      border:1px solid var(--line);
       border-radius:18px;
       padding:14px;
       background:rgba(2,10,18,.22);
@@ -530,8 +272,6 @@
       align-items:center;
       flex-wrap:wrap;
       margin-bottom:14px;
-      position:relative;
-      z-index:1;
     }
 
     select{
@@ -547,8 +287,6 @@
       overflow:auto;
       border:1px solid var(--line);
       border-radius:18px;
-      position:relative;
-      z-index:1;
     }
 
     table{
@@ -565,9 +303,6 @@
     }
 
     th{background:rgba(2,10,18,.28)}
-    .tag-green{color:#bbf7d0;font-weight:800}
-    .tag-red{color:#fecaca;font-weight:800}
-    .tag-yellow{color:#fde68a;font-weight:800}
 
     .bar{
       width:160px;
@@ -575,7 +310,6 @@
       border-radius:999px;
       background:rgba(148,163,184,.14);
       overflow:hidden;
-      position:relative;
     }
 
     .bar-fill{
@@ -614,8 +348,6 @@
       border:1px solid rgba(239,68,68,.38);
       background:rgba(127,29,29,.22);
       color:#fecaca;
-      position:relative;
-      z-index:1;
     }
 
     .empty{
@@ -624,25 +356,21 @@
       color:var(--muted);
       border:1px dashed var(--line);
       border-radius:18px;
-      position:relative;
-      z-index:1;
     }
 
     .hidden{display:none}
 
     @media (max-width: 980px){
       .tabs{grid-template-columns:repeat(2,1fr)}
-      .grid,.mini-grid{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
       .choice-picks{grid-template-columns:1fr}
       h1{font-size:26px}
-      .featured-main{font-size:20px}
-      .conf-meter{width:140px}
     }
   </style>
 </head>
 <body class="theme-nhl">
   <div class="wrap">
-    <div class="hero top-accent-nhl" id="hero">
+    <div class="hero" id="hero">
       <h1 id="titleText">🏒 Game Insights</h1>
 
       <div class="tabs">
@@ -655,7 +383,6 @@
       <div class="day-tabs" id="dayTabs"></div>
 
       <div class="error" id="topError"></div>
-      <div id="featuredPick" class="hidden" style="margin-top:12px;"></div>
     </div>
 
     <div class="panel" id="boardPanel">
@@ -671,7 +398,7 @@
     <div class="panel hidden" id="choicesPanel">
       <div class="section-head">
         <strong>Choices</strong>
-        <span class="muted">Pick today’s winners and track results</span>
+        <span class="muted">Pick winners and track results</span>
       </div>
       <div id="choicesArea">
         <div class="empty">Loading choices...</div>
@@ -703,8 +430,6 @@
         boards: { nhl: null, mlb: null },
         insights: { nhl: null, mlb: null },
         teams: { nhl: null, mlb: null },
-        analyze: { nhl: null, mlb: null },
-        selectedGameIdBySport: { nhl: null, mlb: null },
         selectedAnalyzeTeamBySport: { nhl: null, mlb: null },
         selectedDayIndexBySport: { nhl: 0, mlb: 0 }
       };
@@ -729,18 +454,18 @@
       function showError(msg){
         const box = byId('topError');
         if(!msg){
-          box.style.display='none';
-          box.textContent='';
+          box.style.display = 'none';
+          box.textContent = '';
           return;
         }
-        box.style.display='block';
-        box.textContent=msg;
+        box.style.display = 'block';
+        box.textContent = msg;
       }
 
       async function getJSON(url){
-        const res = await fetch(url,{cache:'no-store'});
+        const res = await fetch(url, { cache:'no-store' });
         let data = null;
-        try { data = await res.json(); } catch(e) {}
+        try { data = await res.json(); } catch (e) {}
         if(!res.ok){
           throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status));
         }
@@ -766,11 +491,9 @@
       }
 
       function setTheme(){
-        const sport = state.sport;
-        document.body.className = sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
-        byId('hero').className = 'hero ' + (sport === 'mlb' ? 'top-accent-mlb' : 'top-accent-nhl');
-        byId('titleText').textContent = sport === 'mlb' ? '⚾ Game Insights' : '🏒 Game Insights';
-        byId('boardTitle').textContent = sport === 'mlb' ? 'MLB Games' : 'NHL Games';
+        document.body.className = state.sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
+        byId('titleText').textContent = state.sport === 'mlb' ? '⚾ Game Insights' : '🏒 Game Insights';
+        byId('boardTitle').textContent = state.sport === 'mlb' ? 'MLB Games' : 'NHL Games';
       }
 
       function refreshTabButtons(){
@@ -784,37 +507,21 @@
         });
       }
 
-      function switchTab(tab){
-        if(tab === 'board'){
-          byId('boardPanel').classList.remove('hidden');
-          byId('choicesPanel').classList.add('hidden');
-          byId('analyzePanel').classList.add('hidden');
-        } else if(tab === 'choices'){
-          byId('boardPanel').classList.add('hidden');
-          byId('choicesPanel').classList.remove('hidden');
-          byId('analyzePanel').classList.add('hidden');
-        } else if(tab === 'analyze'){
-          byId('boardPanel').classList.add('hidden');
-          byId('choicesPanel').classList.add('hidden');
-          byId('analyzePanel').classList.remove('hidden');
-        }
-      }
-
-      function boardPayload(){
-        return state.boards[state.sport];
+      function switchTab(){
+        byId('boardPanel').classList.toggle('hidden', state.tab !== 'board');
+        byId('choicesPanel').classList.toggle('hidden', state.tab !== 'choices');
+        byId('analyzePanel').classList.toggle('hidden', state.tab !== 'analyze');
       }
 
       function boardDays(){
-        const payload = boardPayload();
-        const days = (payload && payload.days) || [];
-        return Array.isArray(days) ? days : [];
+        const payload = state.boards[state.sport];
+        return Array.isArray(payload && payload.days) ? payload.days : [];
       }
 
       function selectedDayIndex(){
         const days = boardDays();
         let idx = Number(state.selectedDayIndexBySport[state.sport] || 0);
-        if(idx < 0) idx = 0;
-        if(idx >= days.length) idx = 0;
+        if(idx < 0 || idx >= days.length) idx = 0;
         state.selectedDayIndexBySport[state.sport] = idx;
         return idx;
       }
@@ -822,20 +529,36 @@
       function currentBoardDay(){
         const days = boardDays();
         if(!days.length) return null;
-        return days[selectedDayIndex()] || days[0] || null;
+        return days[selectedDayIndex()] || days[0];
+      }
+
+      function currentGames(){
+        const day = currentBoardDay();
+        return Array.isArray(day && day.games) ? day.games.slice() : [];
+      }
+
+      function findInsight(gameId){
+        const payload = state.insights[state.sport];
+        if(!payload || !Array.isArray(payload.insights)) return null;
+        return payload.insights.find(function(x){
+          return String(x.gameId) === String(gameId);
+        }) || null;
       }
 
       function renderDayTabs(){
         const host = byId('dayTabs');
+        if(state.tab !== 'board'){
+          host.innerHTML = '';
+          return;
+        }
         const days = boardDays();
-
-        if(state.tab !== 'board' || !days.length){
+        if(!days.length){
           host.innerHTML = '';
           return;
         }
 
         host.innerHTML = days.map(function(day, idx){
-          const label = day.label || (idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : ('Day ' + (idx + 1)));
+          const label = day.label || (idx === 0 ? 'Today' : 'Tomorrow');
           const active = idx === selectedDayIndex() ? ' active' : '';
           return '<button type="button" class="day-btn' + active + '" data-day-index="' + idx + '">' + esc(label) + '</button>';
         }).join('');
@@ -843,60 +566,34 @@
         host.querySelectorAll('[data-day-index]').forEach(function(btn){
           btn.addEventListener('click', function(){
             state.selectedDayIndexBySport[state.sport] = Number(this.getAttribute('data-day-index'));
-            state.selectedGameIdBySport[state.sport] = null;
             renderDayTabs();
-            renderFeaturedPick();
             renderBoard();
           });
         });
       }
 
-      function findInsight(gameId){
-        const payload = state.insights[state.sport];
-        if(!payload || !payload.insights) return null;
-        return payload.insights.find(function(x){
-          return String(x.gameId) === String(gameId);
-        }) || null;
+      function confidenceTier(insight){
+        const conf = Number((insight || {}).confidence || 0);
+        if(conf >= 24) return 'Strong edge';
+        if(conf >= 14) return 'Medium edge';
+        return 'Tight game';
       }
 
-      function currentDayGames(){
-        const day = currentBoardDay();
-        return ((day && day.games) || []).slice();
+      function chipClass(insight){
+        return Number((insight || {}).confidence || 0) >= 24 ? 'chip chip-strong' : 'chip chip-tight';
       }
 
-      function getTopInsight(){
-        const games = currentDayGames();
-        const list = games.map(function(g){ return findInsight(g.id); }).filter(Boolean);
-        if(!list.length) return null;
-        return list.slice().sort(function(a,b){
-          return Number(b.confidence || 0) - Number(a.confidence || 0);
-        })[0];
-      }
-
-      function boardGames(){
-        const games = currentDayGames();
-        return games.sort(function(a,b){
-          const ia = findInsight(a.id);
-          const ib = findInsight(b.id);
-          return Number((ib || {}).confidence || 0) - Number((ia || {}).confidence || 0);
-        });
-      }
-
-      function derivePredictedScore(insight){
+      function projectedScore(insight){
         const total = Number((insight && insight.projectedTotal) || (state.sport === 'nhl' ? 6 : 9));
         const homeProb = Number((insight && insight.homeWinProbability) || 50);
         let margin = (homeProb - 50) / (state.sport === 'nhl' ? 11 : 8);
         const maxMargin = state.sport === 'nhl' ? 2.2 : 3.5;
-
         if (margin > maxMargin) margin = maxMargin;
         if (margin < -maxMargin) margin = -maxMargin;
-
         let homeRaw = (total / 2) + margin / 2;
         let awayRaw = total - homeRaw;
-
         let homeScore = Math.max(0, Math.round(homeRaw));
         let awayScore = Math.max(0, Math.round(awayRaw));
-
         if (homeScore === awayScore) {
           if ((insight && insight.predictedWinner) === insight.homeCode) homeScore += 1;
           else awayScore += 1;
@@ -904,148 +601,10 @@
         return { away: awayScore, home: homeScore };
       }
 
-      function getConfidenceTier(insight){
-        const conf = Number((insight || {}).confidence || 0);
-        if(conf >= 24) return 'Strong edge';
-        if(conf >= 14) return 'Medium edge';
-        return 'Tight game';
-      }
-
-      function pickBadgeHtml(insight){
-        if(!insight){
-          return '<span class="pick-badge pick-red">Unavailable</span>';
-        }
-        const tierText = getConfidenceTier(insight);
-        if(tierText === 'Tight game'){
-          return '<span class="pick-badge pick-yellow">' + esc(tierText) + ' • ' + esc(insight.predictedWinner) + '</span>';
-        }
-        return '<span class="pick-badge pick-green">' + esc(tierText) + ' • ' + esc(insight.predictedWinner) + '</span>';
-      }
-
-      function reasonItem(reason){
-        return '' +
-          '<div class="reason-item">' +
-            '<button type="button" class="reason-btn">' + esc(reason.label) + '</button>' +
-            '<div class="reason-body">' + esc(reason.text) + '</div>' +
-          '</div>';
-      }
-
-      function chipClassForInsight(insight){
-        return Number((insight || {}).confidence || 0) >= 24 ? 'chip chip-strong' : 'chip chip-tight';
-      }
-
-      function playerPickText(insight, side){
-        const pick = (((insight || {}).playerPicks || {})[side]) || {};
-        return pick.player || 'No player pick yet';
-      }
-
-      function renderFeaturedPick(){
-        const host = byId('featuredPick');
-        const insight = getTopInsight();
-
-        if(!insight){
-          host.classList.add('hidden');
-          host.innerHTML = '';
-          return;
-        }
-
-        const pred = derivePredictedScore(insight);
-        const conf = Math.max(0, Math.min(100, Math.round(Number(insight.confidence || 0))));
-        const extra = state.sport === 'nhl'
-          ? ('Player picks: ' + playerPickText(insight, 'away') + ' / ' + playerPickText(insight, 'home'))
-          : ('Probable pitchers: ' +
-            ((((insight.probablePitchers || {}).away) || 'TBD')) +
-            ' vs ' +
-            ((((insight.probablePitchers || {}).home) || 'TBD'));
-
-        host.classList.remove('hidden');
-        host.innerHTML =
-          '<div class="featured-pick">' +
-            '<div class="featured-top">' +
-              '<div>' +
-                '<div class="featured-title">Best ' + esc(state.sport.toUpperCase()) + ' pick in this tab</div>' +
-                '<div class="featured-main">' + esc(insight.predictedWinner) + ' over ' + esc(insight.predictedLoser) + '</div>' +
-                '<div class="featured-sub">' +
-                  esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) +
-                  ' • Predicted score ' + esc(pred.away) + '-' + esc(pred.home) +
-                  ' • ' + esc(extra) +
-                '</div>' +
-              '</div>' +
-              '<div>' +
-                '<div class="featured-title">Confidence</div>' +
-                '<div style="font-size:22px;font-weight:900;margin:4px 0 8px;">' + esc(conf) + '%</div>' +
-                '<div class="conf-meter"><div class="conf-fill" style="width:' + conf + '%;"></div></div>' +
-              '</div>' +
-            '</div>' +
-          '</div>';
-      }
-
-      function detailDropHtml(insight){
-        if(!insight){
-          return '<div class="drop"><div class="empty">Could not build this insight right now.</div></div>';
-        }
-
-        const pred = derivePredictedScore(insight);
-        const loserClass = getConfidenceTier(insight) === 'Tight game' ? 'yellow' : 'red';
-        const tierLabel = getConfidenceTier(insight);
-
-        return '' +
-          '<div class="drop">' +
-            '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
-              '<div>' +
-                '<h3>' + esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) + '</h3>' +
-                '<div class="muted" style="margin-top:6px;">' + esc(insight.awayName) + ' vs ' + esc(insight.homeName) + ' • ' + esc(insight.venue || '') + '</div>' +
-              '</div>' +
-              pickBadgeHtml(insight) +
-            '</div>' +
-
-            '<div class="mini-grid">' +
-              '<div class="mini"><div class="label">Predicted score</div><div class="value">' + esc(pred.away) + ' - ' + esc(pred.home) + '</div></div>' +
-              '<div class="mini"><div class="label">Predicted winner</div><div class="value good">' + esc(insight.predictedWinner) + '</div></div>' +
-              '<div class="mini"><div class="label">Predicted loser</div><div class="value ' + loserClass + '">' + esc(insight.predictedLoser) + '</div></div>' +
-              '<div class="mini"><div class="label">Confidence tier</div><div class="value">' + esc(tierLabel) + '</div></div>' +
-              '<div class="mini"><div class="label">Projected total ' + (state.sport === 'nhl' ? 'goals' : 'runs') + '</div><div class="value">' + esc(insight.projectedTotal) + '</div></div>' +
-              '<div class="mini"><div class="label">Updated</div><div class="value" style="font-size:16px;">' + esc(fmtDateTime(insight.lastPredictionRefreshUTC)) + '</div></div>' +
-            '</div>' +
-
-            '<div class="chip-row">' +
-              '<div class="' + chipClassForInsight(insight) + '">' + esc(tierLabel) + '</div>' +
-              '<div class="chip">Home win prob: ' + esc(insight.homeWinProbability) + '%</div>' +
-              '<div class="chip">Away win prob: ' + esc(insight.awayWinProbability) + '%</div>' +
-              (state.sport === 'nhl'
-                ? (
-                    '<div class="chip">Likely point team: ' + esc(insight.likelyPointTeam) + '</div>' +
-                    '<div class="chip">' + esc(insight.awayCode) + ' player pick: ' + esc(playerPickText(insight, 'away')) + '</div>' +
-                    '<div class="chip">' + esc(insight.homeCode) + ' player pick: ' + esc(playerPickText(insight, 'home')) + '</div>'
-                  )
-                : '<div class="chip">Probable pitchers: ' + esc((((insight.probablePitchers || {}).away) || 'TBD') + ' vs ' + (((insight.probablePitchers || {}).home) || 'TBD')) + '</div>') +
-            '</div>' +
-
-            (state.sport === 'nhl'
-              ? (
-                  '<div class="mini-grid">' +
-                    '<div class="mini">' +
-                      '<div class="label">' + esc(insight.awayCode) + ' player pick for a point</div>' +
-                      '<div class="value" style="font-size:18px;">' + esc(playerPickText(insight, 'away')) + '</div>' +
-                      '<div class="muted" style="margin-top:6px;">Any point this game</div>' +
-                    '</div>' +
-                    '<div class="mini">' +
-                      '<div class="label">' + esc(insight.homeCode) + ' player pick for a point</div>' +
-                      '<div class="value" style="font-size:18px;">' + esc(playerPickText(insight, 'home')) + '</div>' +
-                      '<div class="muted" style="margin-top:6px;">Any point this game</div>' +
-                    '</div>' +
-                  '</div>'
-                )
-              : '') +
-
-            '<div class="reason-list">' + (insight.reasons || []).map(reasonItem).join('') + '</div>' +
-          '</div>';
-      }
-
       function renderBoard(){
-        const games = boardGames();
-        const day = currentBoardDay();
         const host = byId('boardArea');
+        const games = currentGames();
+        const day = currentBoardDay();
 
         if(!games.length){
           host.innerHTML = '<div class="empty">No games loaded for this day.</div>';
@@ -1055,63 +614,31 @@
 
         byId('boardHint').textContent = (day && day.label ? day.label + ' • ' : '') + games.length + ' games';
 
-        const openGameId = state.selectedGameIdBySport[state.sport];
         host.innerHTML = games.map(function(g, idx){
           const insight = findInsight(g.id);
-          const pred = insight ? derivePredictedScore(insight) : null;
-          const active = String(g.id) === String(openGameId) ? ' active' : '';
-          const top = idx === 0 ? ' top-game' : '';
-          const conf = Number((insight || {}).confidence || 0);
-
+          const pred = projectedScore(insight);
+          const playerAway = (((insight || {}).playerPicks || {}).away || {}).player || 'No player pick yet';
+          const playerHome = (((insight || {}).playerPicks || {}).home || {}).player || 'No player pick yet';
           return '' +
-            '<div class="game-card' + active + top + '" data-game-id="' + esc(g.id) + '">' +
-              '<div class="game-topline">' +
-                '<div class="game-rank">' + (idx === 0 ? 'Top play' : ('#' + (idx + 1) + ' edge')) + '</div>' +
-                '<div class="muted">Confidence ' + esc(conf.toFixed ? conf.toFixed(1) : conf) + '%</div>' +
-              '</div>' +
+            '<div class="game-card' + (idx === 0 ? ' top-game' : '') + '">' +
               '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
               '<div class="score-row">' +
                 '<div>' +
                   '<div><strong>' + esc(g.awayName) + '</strong></div>' +
                   '<div><strong>' + esc(g.homeName) + '</strong></div>' +
                 '</div>' +
-                '<div class="score">' + (pred ? (esc(pred.away) + ' - ' + esc(pred.home)) : '-') + '</div>' +
+                '<div class="score">' + esc(pred.away) + ' - ' + esc(pred.home) + '</div>' +
               '</div>' +
               '<div class="chip-row">' +
-                '<div class="' + chipClassForInsight(insight) + '">' + esc(getConfidenceTier(insight || {})) + '</div>' +
+                '<div class="' + chipClass(insight) + '">' + esc(confidenceTier(insight)) + '</div>' +
                 '<div class="chip">' + esc(fmtDateTime(g.startTimeUTC)) + '</div>' +
                 '<div class="chip">' + esc(g.venue || '') + '</div>' +
                 (state.sport === 'nhl'
-                  ? (
-                      '<div class="chip">' + esc(g.awayCode) + ' player pick: ' + esc(playerPickText(insight, 'away')) + '</div>' +
-                      '<div class="chip">' + esc(g.homeCode) + ' player pick: ' + esc(playerPickText(insight, 'home')) + '</div>'
-                    )
-                  : (
-                      '<div class="chip">Pitchers: ' + esc(((((insight || {}).probablePitchers || {}).away) || 'TBD') + ' vs ' + ((((insight || {}).probablePitchers || {}).home) || 'TBD')) + '</div>'
-                    )) +
+                  ? '<div class="chip">' + esc(g.awayCode) + ' player pick: ' + esc(playerAway) + '</div><div class="chip">' + esc(g.homeCode) + ' player pick: ' + esc(playerHome) + '</div>'
+                  : '<div class="chip">Pitchers: ' + esc(((((insight || {}).probablePitchers || {}).away) || 'TBD') + ' vs ' + ((((insight || {}).probablePitchers || {}).home) || 'TBD')) + '</div>') +
               '</div>' +
-              (String(g.id) === String(openGameId) ? detailDropHtml(insight) : '') +
             '</div>';
         }).join('');
-
-        host.querySelectorAll('[data-game-id]').forEach(function(el){
-          el.addEventListener('click', function(){
-            const gameId = this.getAttribute('data-game-id');
-            state.selectedGameIdBySport[state.sport] =
-              String(state.selectedGameIdBySport[state.sport]) === String(gameId) ? null : gameId;
-            renderBoard();
-          });
-        });
-
-        host.querySelectorAll('.reason-item').forEach(function(item){
-          const btn = item.querySelector('.reason-btn');
-          if(btn){
-            btn.addEventListener('click', function(ev){
-              ev.stopPropagation();
-              item.classList.toggle('open');
-            });
-          }
-        });
       }
 
       function choiceStatus(game, pickedCode){
@@ -1128,32 +655,20 @@
         const homeLeading = Number(game.homeScore) > Number(game.awayScore);
         const winningCode = awayLeading ? game.awayCode : homeLeading ? game.homeCode : null;
 
-        if(!pickedCode){
-          return { cls:'status-gray', text:'No choice saved' };
-        }
-        if(previewish){
-          return { cls:'status-gray', text:'Game not started' };
-        }
+        if(!pickedCode) return { cls:'status-gray', text:'No choice saved' };
+        if(previewish) return { cls:'status-gray', text:'Game not started' };
         if(finalish){
-          if(winningCode === pickedCode){
-            return { cls:'status-green', text:'Won' };
-          }
-          if(winningCode && winningCode !== pickedCode){
-            return { cls:'status-red', text:'Lost' };
-          }
+          if(winningCode === pickedCode) return { cls:'status-green', text:'Won' };
+          if(winningCode && winningCode !== pickedCode) return { cls:'status-red', text:'Lost' };
           return { cls:'status-yellow', text:'Final / tied state' };
         }
-        if(winningCode === pickedCode){
-          return { cls:'status-green', text:'Live • currently winning' };
-        }
-        if(winningCode && winningCode !== pickedCode){
-          return { cls:'status-red', text:'Live • currently losing' };
-        }
+        if(winningCode === pickedCode) return { cls:'status-green', text:'Live • currently winning' };
+        if(winningCode && winningCode !== pickedCode) return { cls:'status-red', text:'Live • currently losing' };
         return { cls:'status-yellow', text:'Live • tied' };
       }
 
       function renderChoices(){
-        const games = boardGames();
+        const games = currentGames();
         const saved = getSavedChoices();
         const host = byId('choicesArea');
 
@@ -1192,9 +707,7 @@
 
       function sparkHtml(trend){
         const vals = Array.isArray(trend) ? trend : [];
-        if(!vals.length){
-          return '<div class="spark"><span style="height:10px;"></span></div>';
-        }
+        if(!vals.length) return '<div class="spark"><span style="height:10px;"></span></div>';
         return '<div class="spark">' + vals.map(function(v){
           let cls = 'loss';
           let h = 10;
@@ -1216,36 +729,23 @@
             '<table>' +
               '<thead>' +
                 '<tr>' +
-                  '<th>Opponent</th>' +
-                  '<th>GP</th>' +
-                  '<th>W</th>' +
-                  '<th>L</th>' +
-                  '<th>OTW</th>' +
-                  '<th>OTL</th>' +
-                  '<th>GF</th>' +
-                  '<th>GA</th>' +
-                  '<th>GD</th>' +
-                  '<th>Score %</th>' +
-                  '<th>Graph</th>' +
-                  '<th>Recent</th>' +
+                  '<th>Opponent</th><th>GP</th><th>W</th><th>L</th><th>OTW</th><th>OTL</th><th>GF</th><th>GA</th><th>GD</th><th>Score %</th><th>Graph</th><th>Recent</th>' +
                 '</tr>' +
               '</thead>' +
               '<tbody>' +
                 rows.map(function(r){
                   const width = Math.max(4, Math.round((Number(r.scorePct) || 0) * 100));
-                  const diff = Number(r.goalDiff || 0);
-                  const diffCls = diff > 0 ? 'tag-green' : diff < 0 ? 'tag-red' : 'tag-yellow';
                   return '' +
                     '<tr>' +
                       '<td><strong>' + esc(r.opponentName) + '</strong> <span class="muted">(' + esc(r.opponentCode) + ')</span></td>' +
                       '<td>' + esc(r.games) + '</td>' +
-                      '<td class="tag-green">' + esc(r.wins) + '</td>' +
-                      '<td class="tag-red">' + esc(r.losses) + '</td>' +
-                      '<td class="tag-yellow">' + esc(r.otWins || 0) + '</td>' +
-                      '<td class="tag-yellow">' + esc(r.otLosses || 0) + '</td>' +
+                      '<td>' + esc(r.wins) + '</td>' +
+                      '<td>' + esc(r.losses) + '</td>' +
+                      '<td>' + esc(r.otWins || 0) + '</td>' +
+                      '<td>' + esc(r.otLosses || 0) + '</td>' +
                       '<td>' + esc(r.gf) + '</td>' +
                       '<td>' + esc(r.ga) + '</td>' +
-                      '<td class="' + diffCls + '">' + esc(diff) + '</td>' +
+                      '<td>' + esc(r.goalDiff) + '</td>' +
                       '<td>' + esc(((Number(r.scorePct) || 0) * 100).toFixed(1)) + '%</td>' +
                       '<td><div class="bar"><div class="bar-fill" style="width:' + width + '%;"></div></div></td>' +
                       '<td>' + sparkHtml(r.trend) + '</td>' +
@@ -1261,7 +761,6 @@
         host.innerHTML = '<div class="empty">Loading matchup history...</div>';
         try{
           const payload = await getJSON('/api/team-analyze/' + state.sport + '/' + encodeURIComponent(teamCode));
-          state.analyze[state.sport] = payload;
           host.innerHTML = renderAnalyzeTable(payload);
         }catch(err){
           host.innerHTML = '<div class="empty">Could not load team analyze data.</div>';
@@ -1270,25 +769,11 @@
       }
 
       async function ensureBoardAndTeams(){
-        const tasks = [];
-
-        if(!state.boards[state.sport]){
-          tasks.push(
-            getJSON('/api/board/' + state.sport).then(function(data){
-              state.boards[state.sport] = data;
-            })
-          );
-        }
-
-        if(!state.teams[state.sport]){
-          tasks.push(
-            getJSON('/api/teams/' + state.sport).then(function(data){
-              state.teams[state.sport] = data;
-            })
-          );
-        }
-
-        await Promise.all(tasks);
+        const requests = [
+          getJSON('/api/board/' + state.sport).then(function(data){ state.boards[state.sport] = data; }),
+          getJSON('/api/teams/' + state.sport).then(function(data){ state.teams[state.sport] = data; })
+        ];
+        await Promise.all(requests);
 
         if(!state.selectedAnalyzeTeamBySport[state.sport]){
           const list = ((state.teams[state.sport] || {}).teams || []);
@@ -1296,17 +781,13 @@
         }
       }
 
-      function loadInsightsInBackground(){
-        getJSON('/api/insights/' + state.sport)
-          .then(function(data){
-            state.insights[state.sport] = data;
-            renderFeaturedPick();
-            if(state.tab === 'board') renderBoard();
-            if(state.tab === 'choices') renderChoices();
-          })
-          .catch(function(err){
-            showError('Predictions load failed: ' + err.message);
-          });
+      async function loadInsights(){
+        try{
+          state.insights[state.sport] = await getJSON('/api/insights/' + state.sport);
+        }catch(err){
+          state.insights[state.sport] = { insights: [] };
+          showError('Predictions load failed: ' + err.message);
+        }
       }
 
       function renderTeamSelect(){
@@ -1314,7 +795,9 @@
         const sel = byId('teamSelect');
         const selected = state.selectedAnalyzeTeamBySport[state.sport] || '';
         sel.innerHTML = teams.map(function(t){
-          return '<option value="' + esc(t.code) + '"' + (t.code === selected ? ' selected' : '') + '>' + esc(t.name) + ' (' + esc(t.code) + ')</option>';
+          return '<option value="' + esc(t.code) + '"' + (t.code === selected ? ' selected' : '') + '>' +
+            esc(t.name) + ' (' + esc(t.code) + ')' +
+          '</option>';
         }).join('');
       }
 
@@ -1323,25 +806,29 @@
           showError('');
           setTheme();
           refreshTabButtons();
-          switchTab(state.tab);
+          switchTab();
+
+          byId('boardArea').innerHTML = '<div class="empty">Loading games...</div>';
+          byId('choicesArea').innerHTML = '<div class="empty">Loading choices...</div>';
 
           await ensureBoardAndTeams();
-
+          renderTeamSelect();
           renderDayTabs();
-          renderFeaturedPick();
           renderBoard();
           renderChoices();
-          renderTeamSelect();
+
+          loadInsights().then(function(){
+            renderBoard();
+            renderChoices();
+          });
 
           if(state.tab === 'analyze'){
             await loadAnalyze(state.selectedAnalyzeTeamBySport[state.sport]);
           }
-
-          if(!state.insights[state.sport]){
-            loadInsightsInBackground();
-          }
         }catch(err){
           showError('Could not load data: ' + err.message);
+          byId('boardArea').innerHTML = '<div class="empty">Could not load games.</div>';
+          byId('choicesArea').innerHTML = '<div class="empty">Could not load choices.</div>';
         }
       }
 
@@ -1357,7 +844,6 @@
           } else {
             state.tab = tab;
           }
-          state.selectedGameIdBySport[state.sport] = null;
           fullRender();
         });
       });
@@ -1368,33 +854,6 @@
       });
 
       fullRender();
-
-      setInterval(function(){
-        getJSON('/api/board/' + state.sport)
-          .then(function(data){
-            state.boards[state.sport] = data;
-            renderDayTabs();
-            if(state.tab === 'board'){
-              renderFeaturedPick();
-              renderBoard();
-            } else if(state.tab === 'choices'){
-              renderChoices();
-            }
-          })
-          .catch(function(){});
-
-        getJSON('/api/insights/' + state.sport)
-          .then(function(data){
-            state.insights[state.sport] = data;
-            renderFeaturedPick();
-            if(state.tab === 'board'){
-              renderBoard();
-            } else if(state.tab === 'choices'){
-              renderChoices();
-            }
-          })
-          .catch(function(){});
-      }, 900000);
     });
   </script>
 </body>
