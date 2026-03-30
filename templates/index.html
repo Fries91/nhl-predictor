@@ -285,7 +285,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:980px;
+      min-width:1120px;
     }
 
     th,td{
@@ -293,6 +293,7 @@
       border-bottom:1px solid rgba(148,163,184,.12);
       text-align:left;
       white-space:nowrap;
+      vertical-align:top;
     }
 
     th{background:rgba(2,10,18,.28)}
@@ -332,6 +333,45 @@
     .spark .otw{background:#facc15}
     .spark .otl{background:#f59e0b}
     .spark .loss{background:#ef4444}
+
+    .period-cell{
+      min-width:170px;
+    }
+
+    .period-row{
+      margin-bottom:8px;
+    }
+
+    .period-top{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      font-size:11px;
+      margin-bottom:4px;
+    }
+
+    .period-bars{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:6px;
+    }
+
+    .period-track{
+      height:10px;
+      border-radius:999px;
+      background:rgba(148,163,184,.14);
+      overflow:hidden;
+    }
+
+    .period-fill-for{
+      height:100%;
+      background:rgba(34,197,94,.78);
+    }
+
+    .period-fill-against{
+      height:100%;
+      background:rgba(239,68,68,.78);
+    }
 
     .error{
       display:none;
@@ -478,7 +518,14 @@
 
       function saveChoice(gameId, teamCode){
         const data = getSavedChoices();
-        data[String(gameId)] = teamCode;
+        const key = String(gameId);
+
+        if(data[key] === teamCode){
+          delete data[key];
+        } else {
+          data[key] = teamCode;
+        }
+
         localStorage.setItem(storageKey(), JSON.stringify(data));
       }
 
@@ -553,6 +600,13 @@
           return { away: 0, home: 0 };
         }
 
+        if(insight.predictedScore){
+          return {
+            away: Number((insight.predictedScore || {}).away || 0),
+            home: Number((insight.predictedScore || {}).home || 0)
+          };
+        }
+
         const total = Number(insight.projectedTotal || (state.sport === 'nhl' ? 6 : 9));
         const homeProb = Number(insight.homeWinProbability || 50);
         let margin = (homeProb - 50) / (state.sport === 'nhl' ? 11 : 8);
@@ -573,11 +627,6 @@
         }
 
         return { away: awayScore, home: homeScore };
-      }
-
-      function playerPickText(insight, side){
-        const pick = (((insight || {}).playerPicks || {})[side]) || {};
-        return pick.player || 'No player pick yet';
       }
 
       function renderDayTabs(){
@@ -608,6 +657,36 @@
         });
       }
 
+      function periodGraphHtml(row){
+        const pf = Array.isArray(row.periodAvgFor) ? row.periodAvgFor : [0,0,0];
+        const pa = Array.isArray(row.periodAvgAgainst) ? row.periodAvgAgainst : [0,0,0];
+        const maxVal = Math.max(1, pf[0], pf[1], pf[2], pa[0], pa[1], pa[2]);
+
+        function lane(label, ours, theirs){
+          const oursW = Math.max(6, Math.round((Number(ours || 0) / maxVal) * 100));
+          const theirsW = Math.max(6, Math.round((Number(theirs || 0) / maxVal) * 100));
+
+          return '' +
+            '<div class="period-row">' +
+              '<div class="period-top">' +
+                '<span>' + esc(label) + '</span>' +
+                '<span>' + esc(Number(ours || 0).toFixed(2)) + ' / ' + esc(Number(theirs || 0).toFixed(2)) + '</span>' +
+              '</div>' +
+              '<div class="period-bars">' +
+                '<div class="period-track"><div class="period-fill-for" style="width:' + oursW + '%;"></div></div>' +
+                '<div class="period-track"><div class="period-fill-against" style="width:' + theirsW + '%;"></div></div>' +
+              '</div>' +
+            '</div>';
+        }
+
+        return '' +
+          '<div class="period-cell">' +
+            lane('P1', pf[0], pa[0]) +
+            lane('P2', pf[1], pa[1]) +
+            lane('P3', pf[2], pa[2]) +
+          '</div>';
+      }
+
       function renderBoard(){
         const host = byId('boardArea');
         const games = currentGames();
@@ -624,8 +703,8 @@
         host.innerHTML = games.map(function(g){
           const insight = findInsight(g.id);
           const pred = insight ? projectedScore(insight) : { away: 0, home: 0 };
-          const playerAway = playerPickText(insight, 'away');
-          const playerHome = playerPickText(insight, 'home');
+          const awayProb = Number(((insight || {}).awayWinProbability || 0)).toFixed(1);
+          const homeProb = Number(((insight || {}).homeWinProbability || 0)).toFixed(1);
 
           return '' +
             '<div class="game-card">' +
@@ -641,9 +720,12 @@
                 '<div class="' + chipClass(insight) + '">' + esc(confidenceTier(insight)) + '</div>' +
                 '<div class="chip">' + esc(fmtDateTime(g.startTimeUTC)) + '</div>' +
                 '<div class="chip">' + esc(g.venue || '') + '</div>' +
-                (state.sport === 'nhl'
-                  ? '<div class="chip">' + esc(g.awayCode) + ' player pick: ' + esc(playerAway) + '</div><div class="chip">' + esc(g.homeCode) + ' player pick: ' + esc(playerHome) + '</div>'
-                  : '<div class="chip">Pitchers: ' + esc(((((insight || {}).probablePitchers || {}).away) || 'TBD') + ' vs ' + ((((insight || {}).probablePitchers || {}).home) || 'TBD')) + '</div>') +
+                (
+                  state.sport === 'nhl'
+                    ? '<div class="chip chip-strong">' + esc(g.awayCode) + ' win ' + esc(awayProb) + '%</div>' +
+                      '<div class="chip chip-strong">' + esc(g.homeCode) + ' win ' + esc(homeProb) + '%</div>'
+                    : '<div class="chip">Pitchers: ' + esc(((((insight || {}).probablePitchers || {}).away) || 'TBD') + ' vs ' + ((((insight || {}).probablePitchers || {}).home) || 'TBD')) + '</div>'
+                ) +
               '</div>' +
             '</div>';
         }).join('');
@@ -736,11 +818,10 @@
           '<div class="table-wrap">' +
             '<table>' +
               '<thead>' +
-                '<tr><th>Opponent</th><th>GP</th><th>W</th><th>L</th><th>OTW</th><th>OTL</th><th>GF</th><th>GA</th><th>GD</th><th>Score %</th><th>Graph</th><th>Recent</th></tr>' +
+                '<tr><th>Opponent</th><th>GP</th><th>W</th><th>L</th><th>OTW</th><th>OTL</th><th>GF</th><th>GA</th><th>GD</th><th>Score %</th><th>P1 / P2 / P3</th><th>Recent</th></tr>' +
               '</thead>' +
               '<tbody>' +
                 rows.map(function(r){
-                  const width = Math.max(4, Math.round((Number(r.scorePct) || 0) * 100));
                   return '' +
                     '<tr>' +
                       '<td><strong>' + esc(r.opponentName) + '</strong> <span class="muted">(' + esc(r.opponentCode) + ')</span></td>' +
@@ -753,7 +834,7 @@
                       '<td>' + esc(r.ga) + '</td>' +
                       '<td>' + esc(r.goalDiff) + '</td>' +
                       '<td>' + esc(((Number(r.scorePct) || 0) * 100).toFixed(1)) + '%</td>' +
-                      '<td><div class="bar"><div class="bar-fill" style="width:' + width + '%;"></div></div></td>' +
+                      '<td>' + (state.sport === 'nhl' ? periodGraphHtml(r) : '<div class="bar"><div class="bar-fill" style="width:' + Math.max(4, Math.round((Number(r.scorePct) || 0) * 100)) + '%;"></div></div>') + '</td>' +
                       '<td>' + sparkHtml(r.trend) + '</td>' +
                     '</tr>';
                 }).join('') +
