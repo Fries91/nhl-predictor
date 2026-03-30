@@ -9,6 +9,8 @@ from typing import Any
 
 import requests
 from flask import Flask, jsonify, render_template
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 app = Flask(__name__)
 
@@ -21,7 +23,20 @@ PRED_TTL = 600
 ANALYZE_TTL = 3600
 
 session = requests.Session()
-session.headers.update({"User-Agent": "Game-Insights/3.7"})
+session.headers.update({"User-Agent": "Game-Insights/3.8"})
+
+retry_strategy = Retry(
+    total=3,
+    connect=3,
+    read=3,
+    backoff_factor=0.8,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+    raise_on_status=False,
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+session.mount("https://", adapter)
+session.mount("http://", adapter)
 
 _cache: dict[str, tuple[float, Any]] = {}
 
@@ -46,9 +61,24 @@ def fetch_json(url: str, ttl: int) -> Any:
     cached = ttl_get(url)
     if cached is not None:
         return cached
-    response = session.get(url, timeout=TIMEOUT)
-    response.raise_for_status()
-    return ttl_set(url, response.json(), ttl)
+
+    last_error: Exception | None = None
+
+    for timeout in (12, 20, 30):
+        try:
+            response = session.get(url, timeout=timeout)
+            response.raise_for_status()
+            data = response.json()
+            return ttl_set(url, data, ttl)
+        except Exception as exc:
+            last_error = exc
+            time.sleep(0.6)
+
+    cached = ttl_get(url)
+    if cached is not None:
+        return cached
+
+    raise RuntimeError(f"Upstream fetch failed for {url}: {last_error}")
 
 
 def utc_now() -> datetime:
@@ -61,6 +91,10 @@ def today_utc_str() -> str:
 
 def date_plus_utc_str(days: int) -> str:
     return (utc_now() + timedelta(days=days)).strftime("%Y-%m-%d")
+
+
+def current_mlb_season() -> int:
+    return utc_now().year
 
 
 def safe_float(value: Any, default: float = 0.0) -> float:
@@ -196,7 +230,7 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     score = 0.0
     score += (home_strength["points_pct"] - away_strength["points_pct"]) * 3.2
     score += (home_strength["goal_diff_pg"] - away_strength["goal_diff_pg"]) * 1.1
-    score += 0.18  # small home edge
+    score += 0.18
 
     home_prob = logistic(score)
     predicted_winner = home if home_prob >= 0.5 else away
@@ -274,6 +308,9 @@ def nhl_insights() -> dict[str, Any]:
 
 
 def nhl_team_analyze(team_code: str) -> dict[str, Any]:
+    season = safe_str((fetch_json(f"{NHL_API}/standings/now", BOARD_TTL) or {}).get("wildCardIndicator", ""))
+    _ = season  # keep simple and harmless
+
     data = fetch_json(f"{NHL_API}/club-schedule-season/{team_code}/now", ANALYZE_TTL)
     names = nhl_team_name_map()
     rows = defaultdict(lambda: {
@@ -288,7 +325,7 @@ def nhl_team_analyze(team_code: str) -> dict[str, Any]:
         home_code = safe_str(home.get("abbrev"))
         status = safe_str(raw.get("gameState") or raw.get("gameScheduleState"))
         if status != "OFF":
-            continue
+          continue
 
         is_home = home_code == team_code
         if not is_home and away_code != team_code:
@@ -651,7 +688,15 @@ def api_board(sport: str):
     try:
         return jsonify(board_for_sport(sport))
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+        return jsonify({
+            "sport": sport,
+            "updatedUTC": utc_now().isoformat(),
+            "days": [
+                {"label": "Today", "date": today_utc_str(), "games": []},
+                {"label": "Tomorrow", "date": date_plus_utc_str(1), "games": []}
+            ],
+            "error": str(exc)
+        }), 200
 
 
 @app.get("/api/insights/<sport>")
@@ -661,7 +706,12 @@ def api_insights(sport: str):
     try:
         return jsonify(insights_for_sport(sport))
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+        return jsonify({
+            "sport": sport,
+            "updatedUTC": utc_now().isoformat(),
+            "insights": [],
+            "error": str(exc)
+        }), 200
 
 
 @app.get("/api/teams/<sport>")
@@ -671,7 +721,11 @@ def api_teams(sport: str):
     try:
         return jsonify({"sport": sport, "teams": teams_for_sport(sport)})
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+        return jsonify({
+            "sport": sport,
+            "teams": [],
+            "error": str(exc)
+        }), 200
 
 
 @app.get("/api/team-analyze/<sport>/<team_code>")
@@ -681,7 +735,13 @@ def api_team_analyze(sport: str, team_code: str):
     try:
         return jsonify(analyze_for_sport(sport, team_code.upper()))
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+        return jsonify({
+            "sport": sport,
+            "teamCode": team_code.upper(),
+            "teamName": team_code.upper(),
+            "rows": [],
+            "error": str(exc)
+        }), 200
 
 
 if __name__ == "__main__":
