@@ -41,6 +41,14 @@
         linear-gradient(180deg,#0a1a0f 0%, #10311b 42%, #112617 100%);
     }
 
+    body.theme-nba{
+      background:
+        radial-gradient(circle at 50% -10%, rgba(251,146,60,.22), transparent 38%),
+        radial-gradient(circle at 12% 8%, rgba(249,115,22,.14), transparent 28%),
+        radial-gradient(circle at 88% 10%, rgba(96,165,250,.10), transparent 26%),
+        linear-gradient(180deg,#1c0f08 0%, #2d170a 42%, #1f120d 100%);
+    }
+
     .wrap{
       max-width:1320px;
       margin:0 auto;
@@ -73,7 +81,7 @@
 
     .tabs{
       display:grid;
-      grid-template-columns:repeat(4,1fr);
+      grid-template-columns:repeat(5,1fr);
       gap:10px;
       margin-top:16px;
     }
@@ -100,6 +108,12 @@
       border-color:rgba(34,197,94,.46);
       box-shadow:0 0 0 1px rgba(34,197,94,.42) inset;
       background:linear-gradient(180deg, rgba(22,101,52,.36), rgba(15,23,42,.82));
+    }
+
+    body.theme-nba .tab-btn.active{
+      border-color:rgba(249,115,22,.46);
+      box-shadow:0 0 0 1px rgba(249,115,22,.42) inset;
+      background:linear-gradient(180deg, rgba(154,52,18,.36), rgba(15,23,42,.82));
     }
 
     .day-tabs{
@@ -156,6 +170,10 @@
 
     body.theme-mlb .game-card{
       background:linear-gradient(180deg, rgba(18,50,28,.84), rgba(10,30,16,.90));
+    }
+
+    body.theme-nba .game-card{
+      background:linear-gradient(180deg, rgba(55,28,14,.84), rgba(28,17,10,.90));
     }
 
     .teams-line{
@@ -315,6 +333,10 @@
       background:linear-gradient(90deg, rgba(34,197,94,.9), rgba(250,204,21,.75));
     }
 
+    body.theme-nba .bar-fill{
+      background:linear-gradient(90deg, rgba(249,115,22,.9), rgba(96,165,250,.75));
+    }
+
     .spark{
       display:flex;
       gap:4px;
@@ -393,6 +415,10 @@
 
     .hidden{display:none}
 
+    @media (max-width: 1100px){
+      .tabs{grid-template-columns:repeat(3,1fr)}
+    }
+
     @media (max-width: 980px){
       .tabs{grid-template-columns:repeat(2,1fr)}
       .grid{grid-template-columns:1fr}
@@ -407,8 +433,9 @@
       <h1 id="titleText">🏒 Game Insights</h1>
 
       <div class="tabs">
-        <button class="tab-btn active" data-tab="board">NHL</button>
+        <button class="tab-btn active" data-tab="nhl">NHL</button>
         <button class="tab-btn" data-tab="mlb">MLB</button>
+        <button class="tab-btn" data-tab="nba">NBA</button>
         <button class="tab-btn" data-tab="choices">Choices</button>
         <button class="tab-btn" data-tab="analyze">Team Analyze</button>
       </div>
@@ -456,14 +483,16 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+      const SPORTS = ['nhl', 'mlb', 'nba'];
+
       const state = {
         sport: 'nhl',
         tab: 'board',
-        boards: { nhl: null, mlb: null },
-        insights: { nhl: null, mlb: null },
-        teams: { nhl: null, mlb: null },
-        selectedAnalyzeTeamBySport: { nhl: null, mlb: null },
-        selectedDayIndexBySport: { nhl: 0, mlb: 0 }
+        boards: { nhl: null, mlb: null, nba: null },
+        insights: { nhl: null, mlb: null, nba: null },
+        teams: { nhl: null, mlb: null, nba: null },
+        selectedAnalyzeTeamBySport: { nhl: null, mlb: null, nba: null },
+        selectedDayIndexBySport: { nhl: 0, mlb: 0, nba: 0 }
       };
 
       function byId(id){ return document.getElementById(id); }
@@ -480,6 +509,7 @@
       function fmtDateTime(v){
         if(!v) return '-';
         const d = new Date(v);
+        if(isNaN(d.getTime())) return String(v);
         return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
       }
 
@@ -530,18 +560,29 @@
       }
 
       function setTheme(){
-        document.body.className = state.sport === 'mlb' ? 'theme-mlb' : 'theme-nhl';
-        byId('titleText').textContent = state.sport === 'mlb' ? '⚾ Game Insights' : '🏒 Game Insights';
-        byId('boardTitle').textContent = state.sport === 'mlb' ? 'MLB Games' : 'NHL Games';
+        document.body.className =
+          state.sport === 'mlb' ? 'theme-mlb' :
+          state.sport === 'nba' ? 'theme-nba' :
+          'theme-nhl';
+
+        byId('titleText').textContent =
+          state.sport === 'mlb' ? '⚾ Game Insights' :
+          state.sport === 'nba' ? '🏀 Game Insights' :
+          '🏒 Game Insights';
+
+        byId('boardTitle').textContent =
+          state.sport === 'mlb' ? 'MLB Games' :
+          state.sport === 'nba' ? 'NBA Games' :
+          'NHL Games';
       }
 
       function refreshTabButtons(){
         document.querySelectorAll('.tab-btn').forEach(function(btn){
           const tab = btn.getAttribute('data-tab');
           const active =
-            (state.tab === 'board' && tab === 'board' && state.sport === 'nhl') ||
-            (state.tab === 'board' && tab === 'mlb' && state.sport === 'mlb') ||
-            state.tab === tab;
+            (SPORTS.indexOf(tab) !== -1 && state.tab === 'board' && state.sport === tab) ||
+            (tab === 'choices' && state.tab === 'choices') ||
+            (tab === 'analyze' && state.tab === 'analyze');
           btn.classList.toggle('active', active);
         });
       }
@@ -607,10 +648,11 @@
           };
         }
 
-        const total = Number(insight.projectedTotal || (state.sport === 'nhl' ? 6 : 9));
+        const totalDefault = state.sport === 'nhl' ? 6 : (state.sport === 'mlb' ? 9 : 225);
+        const total = Number(insight.projectedTotal || totalDefault);
         const homeProb = Number(insight.homeWinProbability || 50);
-        let margin = (homeProb - 50) / (state.sport === 'nhl' ? 11 : 8);
-        const maxMargin = state.sport === 'nhl' ? 2.2 : 3.5;
+        let margin = (homeProb - 50) / (state.sport === 'nba' ? 2.6 : state.sport === 'nhl' ? 11 : 8);
+        const maxMargin = state.sport === 'nba' ? 16 : (state.sport === 'nhl' ? 2.2 : 3.5);
 
         if (margin > maxMargin) margin = maxMargin;
         if (margin < -maxMargin) margin = -maxMargin;
@@ -681,9 +723,9 @@
 
         return '' +
           '<div class="period-cell">' +
-            lane('P1', pf[0], pa[0]) +
-            lane('P2', pf[1], pa[1]) +
-            lane('P3', pf[2], pa[2]) +
+            lane(state.sport === 'nba' ? 'Q1' : 'P1', pf[0], pa[0]) +
+            lane(state.sport === 'nba' ? 'Q2' : 'P2', pf[1], pa[1]) +
+            lane(state.sport === 'nba' ? 'Q3' : 'P3', pf[2], pa[2]) +
           '</div>';
       }
 
@@ -720,11 +762,12 @@
                 '<div class="' + chipClass(insight) + '">' + esc(confidenceTier(insight)) + '</div>' +
                 '<div class="chip">' + esc(fmtDateTime(g.startTimeUTC)) + '</div>' +
                 '<div class="chip">' + esc(g.venue || '') + '</div>' +
+                '<div class="chip chip-strong">' + esc(g.awayCode) + ' win ' + esc(awayProb) + '%</div>' +
+                '<div class="chip chip-strong">' + esc(g.homeCode) + ' win ' + esc(homeProb) + '%</div>' +
                 (
-                  state.sport === 'nhl'
-                    ? '<div class="chip chip-strong">' + esc(g.awayCode) + ' win ' + esc(awayProb) + '%</div>' +
-                      '<div class="chip chip-strong">' + esc(g.homeCode) + ' win ' + esc(homeProb) + '%</div>'
-                    : '<div class="chip">Pitchers: ' + esc(((((insight || {}).probablePitchers || {}).away) || 'TBD') + ' vs ' + ((((insight || {}).probablePitchers || {}).home) || 'TBD')) + '</div>'
+                  state.sport === 'mlb'
+                    ? '<div class="chip">Pitchers: ' + esc(((((insight || {}).probablePitchers || {}).away) || 'TBD') + ' vs ' + ((((insight || {}).probablePitchers || {}).home) || 'TBD')) + '</div>'
+                    : ''
                 ) +
               '</div>' +
             '</div>';
@@ -733,13 +776,19 @@
 
       function choiceStatus(game, pickedCode){
         const statusText = String(game.status || '');
-        const finalish = state.sport === 'nhl'
-          ? game.status === 'OFF'
-          : statusText.toLowerCase().indexOf('final') !== -1;
+        const lower = statusText.toLowerCase();
 
-        const previewish = state.sport === 'nhl'
-          ? (game.status === 'PRE' || game.status === 'FUT')
-          : (statusText.toLowerCase().indexOf('preview') !== -1 || statusText.toLowerCase().indexOf('scheduled') !== -1);
+        const finalish = (
+          game.status === 'OFF' ||
+          lower.indexOf('final') !== -1
+        );
+
+        const previewish = (
+          game.status === 'PRE' ||
+          game.status === 'FUT' ||
+          lower.indexOf('preview') !== -1 ||
+          lower.indexOf('scheduled') !== -1
+        );
 
         const awayLeading = Number(game.awayScore) > Number(game.homeScore);
         const homeLeading = Number(game.homeScore) > Number(game.awayScore);
@@ -818,10 +867,15 @@
           '<div class="table-wrap">' +
             '<table>' +
               '<thead>' +
-                '<tr><th>Opponent</th><th>GP</th><th>W</th><th>L</th><th>OTW</th><th>OTL</th><th>GF</th><th>GA</th><th>GD</th><th>Score %</th><th>P1 / P2 / P3</th><th>Recent</th></tr>' +
+                '<tr><th>Opponent</th><th>GP</th><th>W</th><th>L</th><th>OTW</th><th>OTL</th><th>GF</th><th>GA</th><th>GD</th><th>Score %</th><th>' + esc(state.sport === 'nba' ? 'Q1 / Q2 / Q3' : 'P1 / P2 / P3') + '</th><th>Recent</th></tr>' +
               '</thead>' +
               '<tbody>' +
                 rows.map(function(r){
+                  const fallbackBar = '<div class="bar"><div class="bar-fill" style="width:' + Math.max(4, Math.round((Number(r.scorePct) || 0) * 100)) + '%;"></div></div>';
+                  const graph = (state.sport === 'nhl' || state.sport === 'nba')
+                    ? periodGraphHtml(r)
+                    : fallbackBar;
+
                   return '' +
                     '<tr>' +
                       '<td><strong>' + esc(r.opponentName) + '</strong> <span class="muted">(' + esc(r.opponentCode) + ')</span></td>' +
@@ -834,7 +888,7 @@
                       '<td>' + esc(r.ga) + '</td>' +
                       '<td>' + esc(r.goalDiff) + '</td>' +
                       '<td>' + esc(((Number(r.scorePct) || 0) * 100).toFixed(1)) + '%</td>' +
-                      '<td>' + (state.sport === 'nhl' ? periodGraphHtml(r) : '<div class="bar"><div class="bar-fill" style="width:' + Math.max(4, Math.round((Number(r.scorePct) || 0) * 100)) + '%;"></div></div>') + '</td>' +
+                      '<td>' + graph + '</td>' +
                       '<td>' + sparkHtml(r.trend) + '</td>' +
                     '</tr>';
                 }).join('') +
@@ -922,15 +976,14 @@
       document.querySelectorAll('.tab-btn').forEach(function(btn){
         btn.addEventListener('click', function(){
           const tab = this.getAttribute('data-tab');
-          if(tab === 'board'){
+
+          if(SPORTS.indexOf(tab) !== -1){
             state.tab = 'board';
-            state.sport = 'nhl';
-          } else if(tab === 'mlb'){
-            state.tab = 'board';
-            state.sport = 'mlb';
+            state.sport = tab;
           } else {
             state.tab = tab;
           }
+
           fullRender();
         });
       });
