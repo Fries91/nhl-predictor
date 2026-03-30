@@ -4,19 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Game Insights</title>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Game Insights">
   <style>
     :root{
-      --panel:rgba(8,19,33,.78);
-      --panel-2:rgba(13,30,50,.88);
+      --panel:rgba(8,19,33,.82);
+      --panel-2:rgba(13,30,50,.9);
       --line:rgba(191,230,255,.18);
       --text:#edf2f7;
       --muted:#a9b9cc;
       --green:#22c55e;
       --yellow:#facc15;
       --red:#ef4444;
-      --blue:#60a5fa;
       --shadow:0 18px 50px rgba(0,0,0,.24);
     }
 
@@ -128,61 +125,6 @@
       color:#fde68a;
     }
 
-    .featured-pick{
-      margin-top:12px;
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px 16px;
-      background:linear-gradient(180deg, rgba(10,25,43,.78), rgba(7,17,31,.84));
-    }
-
-    body.theme-mlb .featured-pick{
-      background:linear-gradient(180deg, rgba(14,36,20,.80), rgba(9,22,14,.86));
-    }
-
-    .featured-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-
-    .featured-title{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:1px;
-      color:var(--muted);
-      font-weight:800;
-    }
-
-    .featured-main{
-      font-size:22px;
-      font-weight:900;
-      margin-top:4px;
-    }
-
-    .featured-sub{
-      color:var(--muted);
-      margin-top:6px;
-      font-size:13px;
-      line-height:1.4;
-    }
-
-    .conf-meter{
-      width:160px;
-      height:12px;
-      border-radius:999px;
-      background:rgba(148,163,184,.14);
-      overflow:hidden;
-      border:1px solid rgba(148,163,184,.14);
-    }
-
-    .conf-fill{
-      height:100%;
-      background:linear-gradient(90deg, rgba(250,204,21,.92), rgba(34,197,94,.92));
-    }
-
     .panel{
       background:linear-gradient(180deg, rgba(8,19,33,.76), rgba(8,19,33,.70));
       border-radius:20px;
@@ -214,10 +156,6 @@
 
     body.theme-mlb .game-card{
       background:linear-gradient(180deg, rgba(18,50,28,.84), rgba(10,30,16,.90));
-    }
-
-    .game-card.top-game{
-      border-color:rgba(250,204,21,.42);
     }
 
     .teams-line{
@@ -420,13 +358,12 @@
       .grid{grid-template-columns:1fr}
       .choice-picks{grid-template-columns:1fr}
       h1{font-size:26px}
-      .featured-main{font-size:20px}
     }
   </style>
 </head>
 <body class="theme-nhl">
   <div class="wrap">
-    <div class="hero" id="hero">
+    <div class="hero">
       <h1 id="titleText">🏒 Game Insights</h1>
 
       <div class="tabs">
@@ -438,7 +375,6 @@
 
       <div class="day-tabs" id="dayTabs"></div>
       <div class="error" id="topError"></div>
-      <div id="featuredPick" class="hidden"></div>
     </div>
 
     <div class="panel" id="boardPanel">
@@ -666,57 +602,10 @@
           btn.addEventListener('click', function(){
             state.selectedDayIndexBySport[state.sport] = Number(this.getAttribute('data-day-index'));
             renderDayTabs();
-            renderFeaturedPick();
             renderBoard();
             renderChoices();
           });
         });
-      }
-
-      function renderFeaturedPick(){
-        const host = byId('featuredPick');
-        const games = currentGames();
-        const list = games.map(function(g){ return findInsight(g.id); }).filter(Boolean);
-
-        if(!list.length){
-          host.classList.add('hidden');
-          host.innerHTML = '';
-          return;
-        }
-
-        const insight = list.slice().sort(function(a,b){
-          return Number(b.confidence || 0) - Number(a.confidence || 0);
-        })[0];
-
-        const pred = projectedScore(insight);
-        const conf = Math.max(0, Math.min(100, Math.round(Number(insight.confidence || 0))));
-        const extra = state.sport === 'nhl'
-          ? ('Player picks: ' + playerPickText(insight, 'away') + ' / ' + playerPickText(insight, 'home'))
-          : ('Probable pitchers: ' +
-            ((((insight.probablePitchers || {}).away) || 'TBD')) +
-            ' vs ' +
-            ((((insight.probablePitchers || {}).home) || 'TBD'));
-
-        host.classList.remove('hidden');
-        host.innerHTML =
-          '<div class="featured-pick">' +
-            '<div class="featured-top">' +
-              '<div>' +
-                '<div class="featured-title">Best ' + esc(state.sport.toUpperCase()) + ' pick in this tab</div>' +
-                '<div class="featured-main">' + esc(insight.predictedWinner) + ' over ' + esc(insight.predictedLoser) + '</div>' +
-                '<div class="featured-sub">' +
-                  esc(insight.awayCode) + ' @ ' + esc(insight.homeCode) +
-                  ' • Predicted score ' + esc(pred.away) + '-' + esc(pred.home) +
-                  ' • ' + esc(extra) +
-                '</div>' +
-              '</div>' +
-              '<div>' +
-                '<div class="featured-title">Confidence</div>' +
-                '<div style="font-size:22px;font-weight:900;margin:4px 0 8px;">' + esc(conf) + '%</div>' +
-                '<div class="conf-meter"><div class="conf-fill" style="width:' + conf + '%;"></div></div>' +
-              '</div>' +
-            '</div>' +
-          '</div>';
       }
 
       function renderBoard(){
@@ -732,14 +621,14 @@
 
         byId('boardHint').textContent = (day && day.label ? day.label + ' • ' : '') + games.length + ' games';
 
-        host.innerHTML = games.map(function(g, idx){
+        host.innerHTML = games.map(function(g){
           const insight = findInsight(g.id);
           const pred = insight ? projectedScore(insight) : { away: 0, home: 0 };
           const playerAway = playerPickText(insight, 'away');
           const playerHome = playerPickText(insight, 'home');
 
           return '' +
-            '<div class="game-card' + (idx === 0 ? ' top-game' : '') + '">' +
+            '<div class="game-card">' +
               '<div class="teams-line">' + esc(g.awayCode) + ' @ ' + esc(g.homeCode) + '</div>' +
               '<div class="score-row">' +
                 '<div>' +
@@ -933,10 +822,8 @@
           renderDayTabs();
           renderBoard();
           renderChoices();
-          renderFeaturedPick();
 
           loadInsights().then(function(){
-            renderFeaturedPick();
             renderBoard();
             renderChoices();
           });
