@@ -4,7 +4,7 @@ import math
 import os
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import requests
@@ -21,7 +21,7 @@ PRED_TTL = 900
 ANALYZE_TTL = 3600
 
 session = requests.Session()
-session.headers.update({"User-Agent": "Game-Insights/3.2"})
+session.headers.update({"User-Agent": "Game-Insights/3.6"})
 
 _cache: dict[str, tuple[float, Any]] = {}
 
@@ -59,6 +59,10 @@ def today_utc_str() -> str:
     return utc_now().strftime("%Y-%m-%d")
 
 
+def date_plus_utc_str(days: int) -> str:
+    return (utc_now() + timedelta(days=days)).strftime("%Y-%m-%d")
+
+
 def current_nhl_season() -> str:
     now = utc_now()
     year = now.year
@@ -77,6 +81,13 @@ def safe_float(value: Any, default: float = 0.0) -> float:
         return default
 
 
+def safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def safe_str(value: Any, default: str = "") -> str:
     if value is None:
         return default
@@ -85,6 +96,21 @@ def safe_str(value: Any, default: str = "") -> str:
 
 def logistic(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
+
+
+def parse_iso_dt(value: Any) -> datetime:
+    text = safe_str(value)
+    if not text:
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
+    try:
+        if text.endswith("Z"):
+            return datetime.fromisoformat(text.replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
 # ---------------- NHL ----------------
@@ -106,7 +132,7 @@ def nhl_team_name_map() -> dict[str, str]:
 
 def nhl_team_list() -> list[dict[str, str]]:
     rows = nhl_standings_map()
-    items = []
+    items: list[dict[str, str]] = []
     for abbr, row in rows.items():
         items.append({"code": abbr, "name": row.get("teamName", {}).get("default", abbr)})
     return sorted(items, key=lambda x: safe_str(x["name"]))
@@ -116,6 +142,8 @@ def nhl_parse_board_game(raw: dict[str, Any]) -> dict[str, Any]:
     away = raw.get("awayTeam", {}) or {}
     home = raw.get("homeTeam", {}) or {}
     names = nhl_team_name_map()
+    away_code = safe_str(away.get("abbrev"))
+    home_code = safe_str(home.get("abbrev"))
     return {
         "sport": "nhl",
         "id": raw.get("id"),
@@ -123,30 +151,39 @@ def nhl_parse_board_game(raw: dict[str, Any]) -> dict[str, Any]:
         "startTimeUTC": safe_str(raw.get("startTimeUTC")),
         "status": safe_str(raw.get("gameState") or raw.get("gameScheduleState") or "PRE"),
         "venue": safe_str((raw.get("venue") or {}).get("default", "")),
-        "awayCode": safe_str(away.get("abbrev")),
-        "homeCode": safe_str(home.get("abbrev")),
-        "awayName": names.get(safe_str(away.get("abbrev")), safe_str(away.get("abbrev"), "Away")),
-        "homeName": names.get(safe_str(home.get("abbrev")), safe_str(home.get("abbrev"), "Home")),
-        "awayScore": int(away.get("score") or 0),
-        "homeScore": int(home.get("score") or 0),
+        "awayCode": away_code,
+        "homeCode": home_code,
+        "awayName": names.get(away_code, away_code or "Away"),
+        "homeName": names.get(home_code, home_code or "Home"),
+        "awayScore": safe_int(away.get("score")),
+        "homeScore": safe_int(home.get("score")),
     }
 
 
 def nhl_board() -> dict[str, Any]:
     today = today_utc_str()
+    tomorrow = date_plus_utc_str(1)
     data = fetch_json(f"{NHL_API}/schedule/{today}", BOARD_TTL)
-    games: list[dict[str, Any]] = []
+    days_out: list[dict[str, Any]] = []
 
-    for day in data.get("gameWeek", []) or []:
-        if day.get("date") == today:
-            games = [nhl_parse_board_game(g) for g in (day.get("games") or [])]
-            break
+    for target_date, label in ((today, "Today"), (tomorrow, "Tomorrow")):
+        games: list[dict[str, Any]] = []
+        for day in data.get("gameWeek", []) or []:
+            if day.get("date") == target_date:
+                parsed = [nhl_parse_board_game(g) for g in (day.get("games") or [])]
+                for g in parsed:
+                    if not g.get("date"):
+                        g["date"] = target_date
+                games = parsed
+                break
 
-    games.sort(key=lambda g: safe_str(g.get("startTimeUTC")))
+        games.sort(key=lambda g: safe_str(g.get("startTimeUTC")))
+        days_out.append({"label": label, "date": target_date, "games": games})
+
     return {
         "sport": "nhl",
         "updatedUTC": utc_now().isoformat(),
-        "days": [{"label": "Today", "date": today, "games": games}],
+        "days": days_out,
     }
 
 
@@ -154,7 +191,7 @@ def nhl_schedule(team_code: str) -> list[dict[str, Any]]:
     season = current_nhl_season()
     data = fetch_json(f"{NHL_API}/club-schedule-season/{team_code}/{season}", PRED_TTL)
     names = nhl_team_name_map()
-    games = []
+    games: list[dict[str, Any]] = []
 
     for raw in data.get("games", []) or []:
         away = raw.get("awayTeam", {}) or {}
@@ -163,8 +200,8 @@ def nhl_schedule(team_code: str) -> list[dict[str, Any]]:
         home_code = safe_str(home.get("abbrev"))
         is_home = home_code == team_code
 
-        team_score = int((home if is_home else away).get("score") or 0)
-        opp_score = int((away if is_home else home).get("score") or 0)
+        team_score = safe_int((home if is_home else away).get("score"))
+        opp_score = safe_int((away if is_home else home).get("score"))
         opp_code = away_code if is_home else home_code
         status = safe_str(raw.get("gameState") or raw.get("gameScheduleState") or "PRE")
         ot = (raw.get("gameOutcome") or {}).get("lastPeriodType") in ("OT", "SO")
@@ -191,113 +228,13 @@ def nhl_schedule(team_code: str) -> list[dict[str, Any]]:
     return sorted(games, key=lambda x: (safe_str(x.get("date")), safe_str(x.get("startTimeUTC"))))
 
 
-def nhl_boxscore(game_id: int) -> dict[str, Any]:
-    return fetch_json(f"{NHL_API}/gamecenter/{game_id}/boxscore", ANALYZE_TTL)
-
-
-def nhl_side_players(side: dict[str, Any]) -> list[dict[str, Any]]:
-    players: list[dict[str, Any]] = []
-    for bucket in ("forwards", "defense", "goalies"):
-        players.extend(side.get(bucket, []) or [])
-    return players
-
-
-def nhl_hot_assist_pick(team_code: str, last_n: int = 3) -> dict[str, Any]:
-    schedule = nhl_schedule(team_code)
-    completed = [g for g in schedule if g["completed"] and g.get("id")]
-    completed = sorted(
-        completed,
-        key=lambda g: (safe_str(g.get("date")), safe_str(g.get("startTimeUTC"))),
-        reverse=True
-    )[:last_n]
-
-    if not completed:
-        return {
-            "teamCode": team_code,
-            "player": "No data",
-            "assistsLast3": 0,
-            "pointsLast3": 0,
-            "gamesUsed": 0,
-            "reason": "No completed games found."
-        }
-
-    totals: dict[str, dict[str, Any]] = {}
-
-    for g in completed:
-        try:
-            box = nhl_boxscore(int(g["id"]))
-        except Exception:
-            continue
-
-        away = box.get("awayTeam", {}) or {}
-        home = box.get("homeTeam", {}) or {}
-
-        side = None
-        if safe_str(away.get("abbrev")) == team_code:
-            side = away
-        elif safe_str(home.get("abbrev")) == team_code:
-            side = home
-
-        if not side:
-            continue
-
-        for p in nhl_side_players(side):
-            first = safe_str((p.get("firstName") or {}).get("default", ""))
-            last = safe_str((p.get("lastName") or {}).get("default", ""))
-            name = (first + " " + last).strip() or safe_str((p.get("name") or {}).get("default", "Unknown"))
-            assists = int(p.get("assists") or 0)
-            goals = int(p.get("goals") or 0)
-            points = assists + goals
-
-            if name not in totals:
-                totals[name] = {
-                    "player": name,
-                    "assistsLast3": 0,
-                    "pointsLast3": 0,
-                    "gamesWithPoint": 0,
-                    "gamesUsed": 0,
-                }
-
-            totals[name]["assistsLast3"] += assists
-            totals[name]["pointsLast3"] += points
-            totals[name]["gamesUsed"] += 1
-            if points > 0:
-                totals[name]["gamesWithPoint"] += 1
-
-    if not totals:
-        return {
-            "teamCode": team_code,
-            "player": "No data",
-            "assistsLast3": 0,
-            "pointsLast3": 0,
-            "gamesUsed": len(completed),
-            "reason": "Boxscore player data unavailable."
-        }
-
-    ranked = sorted(
-        totals.values(),
-        key=lambda x: (
-            -x["assistsLast3"],
-            -x["pointsLast3"],
-            -x["gamesWithPoint"],
-            x["player"]
-        )
-    )
-
-    best = ranked[0]
-    return {
-        "teamCode": team_code,
-        "player": best["player"],
-        "assistsLast3": best["assistsLast3"],
-        "pointsLast3": best["pointsLast3"],
-        "gamesUsed": best["gamesUsed"],
-        "reason": f"Best recent setup trend: {best['assistsLast3']} assists in last {best['gamesUsed']} completed games."
-    }
-
-
 def nhl_recent_form(schedule: list[dict[str, Any]], n: int = 5) -> dict[str, float]:
     completed = [g for g in schedule if g["completed"]]
-    completed = sorted(completed, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
+    completed = sorted(
+        completed,
+        key=lambda g: parse_iso_dt(g.get("startTimeUTC") or g.get("date")),
+        reverse=True,
+    )[:n]
     if not completed:
         return {"win_pct": 0.5, "avg_diff": 0.0, "gf": 3.0, "ga": 3.0}
     return {
@@ -308,39 +245,70 @@ def nhl_recent_form(schedule: list[dict[str, Any]], n: int = 5) -> dict[str, flo
     }
 
 
-def nhl_split_form(schedule: list[dict[str, Any]], is_home: bool, n: int = 5) -> dict[str, float]:
-    games = [g for g in schedule if g["completed"] and g["isHome"] == is_home]
-    games = sorted(games, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
+def nhl_split_form(schedule: list[dict[str, Any]], is_home: bool, n: int = 6) -> dict[str, float]:
+    games = [
+        g for g in sorted(
+            [x for x in schedule if x["completed"] and x["isHome"] == is_home],
+            key=lambda g: parse_iso_dt(g.get("startTimeUTC") or g.get("date")),
+            reverse=True,
+        )[:n]
+    ]
     if not games:
-        return {"win_pct": 0.5, "avg_diff": 0.0}
+        return {"win_pct": 0.5, "avg_diff": 0.0, "gf": 3.0, "ga": 3.0}
     return {
         "win_pct": sum(1 for g in games if g["won"]) / len(games),
         "avg_diff": sum(g["goalDiff"] for g in games) / len(games),
+        "gf": sum(g["teamScore"] for g in games) / len(games),
+        "ga": sum(g["opponentScore"] for g in games) / len(games),
     }
 
 
 def nhl_h2h(team_code: str, opp_code: str, schedule: list[dict[str, Any]], n: int = 4) -> dict[str, float]:
-    games = [g for g in schedule if g["completed"] and g["opponentCode"] == opp_code]
-    games = sorted(games, key=lambda g: safe_str(g.get("date")), reverse=True)[:n]
+    games = [
+        g for g in sorted(
+            [x for x in schedule if x["completed"] and x["opponentCode"] == opp_code],
+            key=lambda g: parse_iso_dt(g.get("startTimeUTC") or g.get("date")),
+            reverse=True,
+        )[:n]
+    ]
     if not games:
-        return {"win_pct": 0.5, "avg_diff": 0.0}
+        return {"win_pct": 0.5, "avg_diff": 0.0, "games": 0}
     return {
         "win_pct": sum(1 for g in games if g["won"]) / len(games),
         "avg_diff": sum(g["goalDiff"] for g in games) / len(games),
+        "games": len(games),
     }
 
 
 def nhl_rest_days(schedule: list[dict[str, Any]], game_date: str) -> int:
-    prior = [g for g in schedule if g["completed"] and safe_str(g.get("date")) < safe_str(game_date)]
+    target = parse_iso_dt(game_date)
+    prior = [g for g in schedule if g["completed"] and parse_iso_dt(g.get("date")) < target]
     if not prior:
         return 4
-    last_date = sorted(prior, key=lambda g: safe_str(g.get("date")), reverse=True)[0]["date"]
+    last_dt = max(parse_iso_dt(g.get("date")) for g in prior)
     try:
-        d1 = datetime.fromisoformat(last_date)
-        d2 = datetime.fromisoformat(game_date)
-        return max(-1, min((d2 - d1).days - 1, 7))
+        return max(0, min((target - last_dt).days - 1, 7))
     except Exception:
         return 1
+
+
+def nhl_streak(schedule: list[dict[str, Any]], limit: int = 6) -> int:
+    games = sorted(
+        [g for g in schedule if g["completed"]],
+        key=lambda g: parse_iso_dt(g.get("startTimeUTC") or g.get("date")),
+        reverse=True,
+    )[:limit]
+    if not games:
+        return 0
+
+    streak = 0
+    first_result = games[0]["won"]
+    for g in games:
+        if g["won"] == first_result:
+            streak += 1
+        else:
+            break
+    return streak if first_result else -streak
 
 
 def nhl_strength(team_code: str) -> dict[str, float]:
@@ -351,6 +319,14 @@ def nhl_strength(team_code: str) -> dict[str, float]:
     }
 
 
+def nhl_player_pick(team_code: str) -> dict[str, Any]:
+    return {
+        "teamCode": team_code,
+        "player": "Best point pick",
+        "reason": "Any point this game",
+    }
+
+
 def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     away = game["awayCode"]
     home = game["homeCode"]
@@ -358,46 +334,65 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     away_sched = nhl_schedule(away)
     home_sched = nhl_schedule(home)
 
-    away_form = nhl_recent_form(away_sched)
-    home_form = nhl_recent_form(home_sched)
+    away_form_5 = nhl_recent_form(away_sched, 5)
+    home_form_5 = nhl_recent_form(home_sched, 5)
 
-    away_split = nhl_split_form(away_sched, False)
-    home_split = nhl_split_form(home_sched, True)
+    away_form_10 = nhl_recent_form(away_sched, 10)
+    home_form_10 = nhl_recent_form(home_sched, 10)
 
-    away_h2h = nhl_h2h(away, home, away_sched)
-    home_h2h = nhl_h2h(home, away, home_sched)
+    away_split = nhl_split_form(away_sched, False, 6)
+    home_split = nhl_split_form(home_sched, True, 6)
+
+    away_h2h = nhl_h2h(away, home, away_sched, 4)
+    home_h2h = nhl_h2h(home, away, home_sched, 4)
 
     away_strength = nhl_strength(away)
     home_strength = nhl_strength(home)
 
-    away_rest = nhl_rest_days(away_sched, game["date"])
-    home_rest = nhl_rest_days(home_sched, game["date"])
+    game_date = game.get("date") or today_utc_str()
+    away_rest = nhl_rest_days(away_sched, game_date)
+    home_rest = nhl_rest_days(home_sched, game_date)
+
+    away_streak = nhl_streak(away_sched, 6)
+    home_streak = nhl_streak(home_sched, 6)
 
     score = 0.0
-    score += (home_strength["points_pct"] - away_strength["points_pct"]) * 3.4
-    score += (home_strength["goal_diff_pg"] - away_strength["goal_diff_pg"]) * 0.95
-    score += (home_form["win_pct"] - away_form["win_pct"]) * 1.6
-    score += (home_form["avg_diff"] - away_form["avg_diff"]) * 0.35
-    score += (home_split["win_pct"] - away_split["win_pct"]) * 0.8
-    score += (home_h2h["win_pct"] - away_h2h["win_pct"]) * 0.6
-    score += (home_rest - away_rest) * 0.08
-    score += 0.20
+    score += (home_strength["points_pct"] - away_strength["points_pct"]) * 3.0
+    score += (home_strength["goal_diff_pg"] - away_strength["goal_diff_pg"]) * 1.1
+    score += (home_form_10["win_pct"] - away_form_10["win_pct"]) * 1.1
+    score += (home_form_10["avg_diff"] - away_form_10["avg_diff"]) * 0.30
+    score += (home_form_5["win_pct"] - away_form_5["win_pct"]) * 1.6
+    score += (home_form_5["avg_diff"] - away_form_5["avg_diff"]) * 0.45
+    score += (home_split["win_pct"] - away_split["win_pct"]) * 0.95
+    score += ((home_split["gf"] - home_split["ga"]) - (away_split["gf"] - away_split["ga"])) * 0.12
+
+    if home_h2h["games"] and away_h2h["games"]:
+        score += (home_h2h["win_pct"] - away_h2h["win_pct"]) * 0.45
+        score += (home_h2h["avg_diff"] - away_h2h["avg_diff"]) * 0.18
+
+    score += (home_rest - away_rest) * 0.12
+    score += (home_streak - away_streak) * 0.05
+    score += 0.18
 
     home_prob = logistic(score)
     predicted_winner = home if home_prob >= 0.5 else away
     predicted_loser = away if predicted_winner == home else home
     confidence = round(abs(home_prob - 0.5) * 200, 1)
-    tier = "tight" if 45 <= home_prob * 100 <= 55 else "edge"
+    tier = "tight" if 47 <= home_prob * 100 <= 53 else "edge"
 
-    projected_total = max(3.5, min(9.5, (home_form["gf"] + away_form["gf"] + home_form["ga"] + away_form["ga"]) / 2))
+    projected_total = (
+        home_form_10["gf"] + away_form_10["gf"] + home_form_10["ga"] + away_form_10["ga"]
+    ) / 2.0
+    projected_total += ((home_split["gf"] + away_split["gf"]) - (home_split["ga"] + away_split["ga"])) * 0.05
+    projected_total = max(4.5, min(8.5, projected_total))
 
-    away_player_pick = nhl_hot_assist_pick(away, last_n=3)
-    home_player_pick = nhl_hot_assist_pick(home, last_n=3)
+    away_player_pick = nhl_player_pick(away)
+    home_player_pick = nhl_player_pick(home)
 
     return {
         "sport": "nhl",
         "gameId": game["id"],
-        "date": game["date"],
+        "date": game_date,
         "startTimeUTC": game["startTimeUTC"],
         "venue": game["venue"],
         "awayCode": away,
@@ -419,20 +414,38 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
         "lastPredictionRefreshUTC": utc_now().isoformat(),
         "reasons": [
             {
-                "label": "Standings edge",
-                "text": f"{home} points % {home_strength['points_pct']:.3f} vs {away} {away_strength['points_pct']:.3f}.",
+                "label": "Season strength",
+                "text": (
+                    f"{home} points % {home_strength['points_pct']:.3f} and goal diff/game "
+                    f"{home_strength['goal_diff_pg']:.2f} vs {away} "
+                    f"{away_strength['points_pct']:.3f} and {away_strength['goal_diff_pg']:.2f}."
+                ),
             },
             {
-                "label": "Recent form",
-                "text": f"{home} recent goal diff {home_form['avg_diff']:.2f} vs {away} {away_form['avg_diff']:.2f}.",
+                "label": "Recent momentum",
+                "text": (
+                    f"Last 5: {home} win% {home_form_5['win_pct']:.2f}, diff {home_form_5['avg_diff']:.2f} "
+                    f"vs {away} {away_form_5['win_pct']:.2f}, diff {away_form_5['avg_diff']:.2f}. "
+                    f"Streaks: {home} {home_streak}, {away} {away_streak}."
+                ),
             },
             {
                 "label": "Home and road split",
-                "text": f"{home} home win% {home_split['win_pct']:.2f} vs {away} road win% {away_split['win_pct']:.2f}.",
+                "text": (
+                    f"{home} home win% {home_split['win_pct']:.2f} with {home_split['gf']:.2f} GF/game "
+                    f"vs {away} road win% {away_split['win_pct']:.2f} with {away_split['gf']:.2f} GF/game."
+                ),
             },
             {
-                "label": "Rest and head-to-head",
-                "text": f"{home} rest {home_rest} days vs {away} rest {away_rest} days. Recent head-to-head leans {home if home_h2h['win_pct'] >= away_h2h['win_pct'] else away}.",
+                "label": "Rest and matchup history",
+                "text": (
+                    f"Rest: {home} {home_rest} days vs {away} {away_rest} days. "
+                    f"Recent H2H leans {home if home_h2h['win_pct'] >= away_h2h['win_pct'] else away}."
+                ),
+            },
+            {
+                "label": "Player point picks",
+                "text": f"{away}: {away_player_pick['player']} | {home}: {home_player_pick['player']}.",
             },
         ],
     }
@@ -440,7 +453,10 @@ def nhl_predict_game(game: dict[str, Any]) -> dict[str, Any]:
 
 def nhl_insights() -> dict[str, Any]:
     board = nhl_board()
-    insights = [nhl_predict_game(g) for g in board["days"][0]["games"]]
+    all_games = []
+    for day in board["days"]:
+        all_games.extend(day["games"])
+    insights = [nhl_predict_game(g) for g in all_games]
     return {"sport": "nhl", "updatedUTC": utc_now().isoformat(), "insights": insights}
 
 
@@ -575,8 +591,8 @@ def mlb_schedule_range(start_date: str, end_date: str) -> list[dict[str, Any]]:
                     "homeCode": safe_str(home_team.get("abbreviation")),
                     "awayName": safe_str(away_team.get("name")),
                     "homeName": safe_str(home_team.get("name")),
-                    "awayScore": int(away.get("score") or 0),
-                    "homeScore": int(home.get("score") or 0),
+                    "awayScore": safe_int(away.get("score")),
+                    "homeScore": safe_int(home.get("score")),
                     "awayProbablePitcher": safe_str((away.get("probablePitcher") or {}).get("fullName")),
                     "homeProbablePitcher": safe_str((home.get("probablePitcher") or {}).get("fullName")),
                     "inningState": safe_str(linescore.get("inningState")),
@@ -590,11 +606,19 @@ def mlb_schedule_range(start_date: str, end_date: str) -> list[dict[str, Any]]:
 
 def mlb_board() -> dict[str, Any]:
     today = today_utc_str()
-    games = [g for g in mlb_schedule_range(today, today) if g["date"] == today]
+    tomorrow = date_plus_utc_str(1)
+    all_games = mlb_schedule_range(today, tomorrow)
+
+    today_games = [g for g in all_games if g["date"] == today]
+    tomorrow_games = [g for g in all_games if g["date"] == tomorrow]
+
     return {
         "sport": "mlb",
         "updatedUTC": utc_now().isoformat(),
-        "days": [{"label": "Today", "date": today, "games": games}],
+        "days": [
+            {"label": "Today", "date": today, "games": today_games},
+            {"label": "Tomorrow", "date": tomorrow, "games": tomorrow_games},
+        ],
     }
 
 
@@ -619,8 +643,8 @@ def mlb_team_schedule(team_code: str) -> list[dict[str, Any]]:
             away_team = away.get("team", {}) or {}
             home_team = home.get("team", {}) or {}
             is_home = safe_str(home_team.get("abbreviation")) == team_code
-            team_score = int((home if is_home else away).get("score") or 0)
-            opp_score = int((away if is_home else home).get("score") or 0)
+            team_score = safe_int((home if is_home else away).get("score"))
+            opp_score = safe_int((away if is_home else home).get("score"))
             status = safe_str((raw.get("status") or {}).get("abstractGameState") or "Preview")
 
             games.append(
@@ -713,18 +737,19 @@ def mlb_predict_game(game: dict[str, Any]) -> dict[str, Any]:
     home_rest = mlb_rest_days(home_sched, game["date"])
 
     score = 0.0
-    score += (home_strength["win_pct"] - away_strength["win_pct"]) * 3.2
-    score += (home_strength["run_diff_pg"] - away_strength["run_diff_pg"]) * 0.9
-    score += (home_form["win_pct"] - away_form["win_pct"]) * 1.4
-    score += (home_form["avg_diff"] - away_form["avg_diff"]) * 0.28
-    score += (home_split["win_pct"] - away_split["win_pct"]) * 0.6
-    score += (home_h2h["win_pct"] - away_h2h["win_pct"]) * 0.4
+    score += (home_strength["win_pct"] - away_strength["win_pct"]) * 3.0
+    score += (home_strength["run_diff_pg"] - away_strength["run_diff_pg"]) * 0.8
+    score += (home_form["win_pct"] - away_form["win_pct"]) * 1.7
+    score += (home_form["avg_diff"] - away_form["avg_diff"]) * 0.25
+    score += (home_split["win_pct"] - away_split["win_pct"]) * 0.9
+    score += (home_h2h["win_pct"] - away_h2h["win_pct"]) * 0.45
     score += (home_rest - away_rest) * 0.08
-    if game.get("homeProbablePitcher") and not game.get("awayProbablePitcher"):
-        score += 0.12
-    if game.get("awayProbablePitcher") and not game.get("homeProbablePitcher"):
-        score -= 0.12
-    score += 0.12
+    score += 0.16
+
+    if game.get("homeProbablePitcher"):
+        score += 0.06
+    if game.get("awayProbablePitcher"):
+        score -= 0.06
 
     home_prob = logistic(score)
     predicted_winner = home if home_prob >= 0.5 else away
@@ -779,7 +804,10 @@ def mlb_predict_game(game: dict[str, Any]) -> dict[str, Any]:
 
 def mlb_insights() -> dict[str, Any]:
     board = mlb_board()
-    insights = [mlb_predict_game(g) for g in board["days"][0]["games"]]
+    all_games = []
+    for day in board["days"]:
+        all_games.extend(day["games"])
+    insights = [mlb_predict_game(g) for g in all_games]
     return {"sport": "mlb", "updatedUTC": utc_now().isoformat(), "insights": insights}
 
 
@@ -830,7 +858,7 @@ def mlb_team_analyze(team_code: str) -> dict[str, Any]:
     }
 
 
-# ---------------- unified routes ----------------
+# ---------------- Shared selectors ----------------
 
 def board_for_sport(sport: str) -> dict[str, Any]:
     return nhl_board() if sport == "nhl" else mlb_board()
@@ -847,6 +875,8 @@ def teams_for_sport(sport: str) -> list[dict[str, str]]:
 def analyze_for_sport(sport: str, team_code: str) -> dict[str, Any]:
     return nhl_team_analyze(team_code) if sport == "nhl" else mlb_team_analyze(team_code)
 
+
+# ---------------- Routes ----------------
 
 @app.get("/")
 def index() -> str:
